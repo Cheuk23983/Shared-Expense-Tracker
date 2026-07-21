@@ -13,12 +13,9 @@ ctk.set_default_color_theme("blue")
 # launcher class
 class MainMenuFrame:
     '''Launcher window for the tracker'''
-    def __init__(self, root, select_trip, create_trip):
+    def __init__(self, root):
         self.root = root
         self.root.title("Group Expense Tracker")
-        self.root.resizeable(False,False)
-        self.select_trip = select_trip
-        self.create_trip = create_trip
         
         # config frame grid layout
         self.root.grid_columnconfig(0,weight=1)
@@ -42,7 +39,11 @@ class MainMenuFrame:
         self.new_trip_btn = ctk.CTkButton(self.action_frame, text="+ New Trip", command=self.create_trip)
         self.new_trip_btn.pack(side="right")
         
+        # Frame for saved trips
+        self.trip__scroll_frame = ctk.CTkFrame(self, label_text="saved Trips")
+        self.trip__scroll_frame.grid(row=3, column=0, padx=20, pady=(5, 15), sticky="ew")
         
+        self.bottom_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.bottom_frame.grid(row=3, column=0, padx=20, pady=(5, 15), sticky="ew")
         
-        
-        
+        self.theme_switch = ctk.CTkSwitch(self.bottom_frame, text="Light/Dark Mode", command=self.toggle_theme)
