@@ -27,8 +27,20 @@ class MainMenuFrame:
         # make the GUI widgets
         self.create_widgets()
         
-
-
+    def create_widgets(self):
+        '''Create all widgets need for the window.'''
+        # Title of the window
+        self.title_label = ctk.CTkLabel(self, text="Group Expense Tracker", font=ctk.CTkFont(size=22, weight="bold"))
+        self.title_label.grid(row=0, column=0, padx=20, pady=(20, 10), sticky="ew")
+        # Frame for top buttons
+        self.action_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.action_frame.grid(row=0, column=0, padx=20, pady=5, sticky="ew")
+        # select button
+        self.select_mode_btn - ctk.CTkButton(self.action_frame, text="Select", width=80)
+        self.select__mode_btn.pack(side="left")
+        # add trip button
+        self.new_trip_btn = ctk.CTkButton(self.action_frame, text="+ New Trip", command=self.create_trip)
+        self.new_trip_btn.pack(side="right")
         
         
         
