@@ -71,7 +71,7 @@ class MainMenuFrame:
 
         # trial for read and load json files
         # trial A
-        trip_files = ["queenstown_trip.json", "japan_holiday.json"]
+        # trip_files = ["queenstown_trip.json", "japan_holiday.json"]
         
         # trial B
         import os
@@ -84,4 +84,5 @@ class MainMenuFrame:
             if file.endswith(".json")
         ]
         
+
         
