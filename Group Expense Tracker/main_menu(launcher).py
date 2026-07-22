@@ -5,6 +5,8 @@
 
 # import customtkinter module
 import customtkinter as ctk
+import json
+from tkinter import messagebox
 
 # Set global default appearance mode and efault color theme
 ctk.set_appearance_mode("System")
@@ -71,7 +73,7 @@ class MainMenuFrame:
 
         # trial for read and load json files
         # trial A
-        # trip_files = ["queenstown_trip.json", "japan_holiday.json"]
+        trip_files = ["queenstown_trip.json", "japan_holiday.json"]
         
         # trial B
         import os
@@ -84,5 +86,24 @@ class MainMenuFrame:
             if file.endswith(".json")
         ]
         
-
+        # show warning label if no files exist
+        if len(trips_file) == 0:
+            self.no_data_lbl = ctk.CTkLabel(self.scroll_trips, text="No saved trips found. Click '+ New Trip' to create one")
+            self.no_data_lbl.pack(pady=20)
+            self.trip_ui_widgets.append(self.no_data_lbl)
+            return
         
+        # Loop through eac json file found
+        for trip in trips_file:
+            try:
+                with open(trip, "r") as f:
+                    trip_data = json.load(f)
+            except FileNotFoundError:
+                messagebox.showerror("Error", f"Could not read file {trip}")
+                continue
+            
+        trip_name = trip_data.get("name", "Unnamed Trip")
+        currency = trip_data.get("base_currency", "NZD")
+        start_date = trip_data.get("start_date", "N/A")
+        end_date = trip_data.get("end_date","N/A")
+
