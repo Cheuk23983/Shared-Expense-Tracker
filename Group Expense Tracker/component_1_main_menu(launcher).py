@@ -6,6 +6,7 @@
 # import customtkinter module
 import customtkinter as ctk
 import json
+import os
 from tkinter import messagebox
 
 # Set global default appearance mode and efault color theme
@@ -18,15 +19,16 @@ class MainMenuFrame:
     def __init__(self, root):
         self.root = root
         self.root.title("Group Expense Tracker")
-        self.geometry("450x550")
+        self.root.geometry("450x550")
 
         self.folder_path = "trips"
-        self.trip_ui_widgets = []
-
+        self.trip_cards_list = []
+        
+        self.delete_mode_on = False
         
         # config frame grid layout
-        self.root.grid_columnconfig(0,weight=1)
-        self.root.grid_rowconfig(2, weight=1)
+        self.root.grid_columnconfigure(0,weight=1)
+        self.root.grid_rowconfigure(2, weight=1)
         
         # make the GUI widgets
         self.create_widgets()
@@ -34,52 +36,75 @@ class MainMenuFrame:
     def create_widgets(self):
         '''Create all widgets need for the window.'''
         # Title of the window
-        self.title_label = ctk.CTkLabel(self, text="Group Expense Tracker", font=ctk.CTkFont(size=22, weight="bold"))
+        self.title_label = ctk.CTkLabel(self.root, text="Group Expense Tracker", font=ctk.CTkFont(size=22, weight="bold"))
         self.title_label.grid(row=0, column=0, padx=20, pady=(20, 10), sticky="ew")
         # Frame for top buttons
-        self.action_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.action_frame.grid(row=0, column=0, padx=20, pady=5, sticky="ew")
+        self.top_buttons_frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        self.top_buttons_frame.grid(row=0, column=0, padx=20, pady=5, sticky="ew")
         # select button
-        self.select_mode_btn - ctk.CTkButton(self.action_frame, text="Select", width=80)
-        self.select__mode_btn.pack(side="left")
+        self.select_mode_btn = ctk.CTkButton(self.top_buttons_frame, text="Select", width=80, command=self.toggle_delete_mode)
+        self.select_mode_btn.pack(side="left")
         # add trip button
-        self.new_trip_btn = ctk.CTkButton(self.action_frame, text="+ New Trip", fg_color="#0080FF", command=self.create_trip)
+        self.new_trip_btn = ctk.CTkButton(self.top_buttons_frame, text="+ New Trip", fg_color="#0080FF", command=self.create_trip_click)
         self.new_trip_btn.pack(side="right")
         
         # Frame for saved trips
-        self.trip__scroll_frame = ctk.CTkFrame(self, label_text="saved Trips")
-        self.trip__scroll_frame.grid(row=3, column=0, padx=20, pady=(5, 15), sticky="ew")
-        
-        self.bottom_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.bottom_frame.grid(row=3, column=0, padx=20, pady=(5, 15), sticky="ew")
+        self.trip_scroll_frame = ctk.CTkScrollableFrame(self.root, label_text="saved Trips")
+        self.trip_scroll_frame.grid(row=3, column=0, padx=20, pady=(5, 15), sticky="ew")
+    
+        self.bottom_frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        self.bottom_frame.grid(row=4, column=0, padx=20, pady=(5, 15), sticky="ew")
         
         self.theme_switch = ctk.CTkSwitch(self.bottom_frame, text="Light/Dark Mode", command=self.toggle_theme)
         self.theme_switch.pack(side="left")
 
         # Load data on startup
-        self.load_and_display_trips()
+        self.load_and_display_trip()
+        
+    
+    def toggle_delete_mode(self):
+       if not self.delete_mode_on == False:
+           self.delete_mode_on = True
+           self.select_mode_btn.configure(text="Cancel", fg_color="gray", hover_color="#555555")
+       else:
+           self.delete_mode_on = False
+           self.select_mode_btn.configure(text="Select", fg_color="#1F6AA5", hover_color="#144870")
+           
+           self.load_and_display_trip()
+           
+    
+    def delete_trip_file(self, file_path, trip_name):
+        user_choice = messagebox.askyesno("Delete Trip", f"Are you sure you want to delete '{trip_name}'?\n This cannot be undone.")
+        
+        if user_choice == True:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    messagebox.showinfo("Success", f"'{trip_name}' has been deleted.")
+                    self.load_and_display_trip()
+            except Exception as error_msg:
+                messagebox.showerror("Error", f"Could not delete file: {error_msg}")
         
     
     def create_trip_click(self):
-        print("Opening Creation Window...")
+        print("Opening Trip Creation Window...")
     
     
-    def open_trip_click(self):
-        print(f"Opening trip...")
+    def open_trip_click(self, file_path):
+        print(f"Opening {file_path} file...")
         
     
     def load_and_display_trip(self):
-        for widget in self.trip_ui_widgets:
+        for widget in self.trip_cards_list:
             widget.destroy()
-        self.trip_ui_widgets = []
+        self.trip_cards_list = []
 
 
         # trial for read and load json files
         # trial A
-        trip_files = ["queenstown_trip.json", "japan_holiday.json"]
+        # trip_files = ["queenstown_trip.json", "japan_holiday.json"]
         
         # trial B
-        import os
         if not os.path.exists(self.folder_path):
             os.makedirs(self.folder_path)
             
@@ -91,9 +116,9 @@ class MainMenuFrame:
         
         # show warning label if no files exist
         if len(trips_file) == 0:
-            self.no_data_lbl = ctk.CTkLabel(self.scroll_trips, text="No saved trips found. Click '+ New Trip' to create one")
+            self.no_data_lbl = ctk.CTkLabel(self.trip_scroll_frame, text="No saved trips found. Click '+ New Trip' to create one")
             self.no_data_lbl.pack(pady=20)
-            self.trip_ui_widgets.append(self.no_data_lbl)
+            self.trip_cards_list.append(self.no_data_lbl)
             return
         
         # Loop through eac json file found
@@ -101,7 +126,7 @@ class MainMenuFrame:
             try:
                 with open(trip, "r") as f:
                     trip_data = json.load(f)
-            except FileNotFoundError:
+            except Exception:
                 messagebox.showerror("Error", f"Could not read file {trip}")
                 continue
             
@@ -111,9 +136,12 @@ class MainMenuFrame:
         end_date = trip_data.get("end_date","N/A")
 
 
-        def click_handler(path):
+        def open_cmd(path):
             return lambda: self.open_trip_click(path)
-        click_command = click_handler(trip)
+        click_command = open_cmd(trip)
+        
+        def delete_cmd(path, name):
+            return lambda: self.delete_trip_file(path, name)
 
         # Create Trips Button Frame
         # trial 1
@@ -122,13 +150,13 @@ class MainMenuFrame:
         #         text=trip_name,
         #         height=40,
         #         font=ctk.CTkFont(size=14),
-        #         command=click_handler(trip_name)
+        #         command=open_cmd(trip_name)
         #     )
         # btn.pack(fill="x", pady=5, padx=5)
-        # self.trip_ui_widgets.append(btn)
+        # self.trip_cards_list.append(btn)
         
         # trial 2
-        card = ctk.CTkFrame(self.scroll_trip, corner_radius=8)
+        card = ctk.CTkFrame(self.trip_scroll_frame, corner_radius=8)
         card.pack(fill="x", pady=6, padx=5)
         
         lbl_card_title = ctk.CTkLabel(card, text=trip_name, font=ctk.CTkFont(size=15, weight="bold"))
@@ -137,20 +165,20 @@ class MainMenuFrame:
         lbl_card_details = ctk.CTkLabel(card, text=f"Currency: {currency} | {start_date} to {end_date}", text_color="gray", font=ctk.CTkFont(size=11))
         lbl_card_details.pack(anchor="w", padx=12, pady=(8, 2))
         
-        btn_open = ctk.CTkButton(card, text="Open Trip", width=80, height= 28, commond=click_command)
+        btn_open = ctk.CTkButton(card, text="Open Trip", width=80, height= 28, command=click_command)
         btn_open.pack(side="right", padx=12, pady=(0, 8))
         
-        self.trip_ui_widgets.append(card)
+        self.trip_cards_list.append(card)
 
     def toggle_theme(self):
             '''Toggles Light/Dark mode'''
-            if self.switch_theme.get() == 1:
+            if self.theme_switch.get() == 1:
                 ctk.set_appearance_mode("Dark")
             else:
                 ctk.set_appearance_mode("Light")
 
 
-# --- Application Entry Point ---
+
 if __name__ == "__main__":
     root = ctk.CTk()
     app = MainMenuFrame(root)
