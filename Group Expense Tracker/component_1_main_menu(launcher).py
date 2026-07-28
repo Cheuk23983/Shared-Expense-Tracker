@@ -50,10 +50,10 @@ class MainMenuFrame:
         
         # Frame for saved trips
         self.trip_scroll_frame = ctk.CTkScrollableFrame(self.root, label_text="saved Trips")
-        self.trip_scroll_frame.grid(row=3, column=0, padx=20, pady=(5, 15), sticky="ew")
+        self.trip_scroll_frame.grid(row=2, column=0, padx=20, pady=10, sticky="ew")
     
         self.bottom_frame = ctk.CTkFrame(self.root, fg_color="transparent")
-        self.bottom_frame.grid(row=4, column=0, padx=20, pady=(5, 15), sticky="ew")
+        self.bottom_frame.grid(row=3, column=0, padx=20, pady=(5, 15), sticky="ew")
         
         self.theme_switch = ctk.CTkSwitch(self.bottom_frame, text="Light/Dark Mode", command=self.toggle_theme)
         self.theme_switch.pack(side="left")
@@ -164,6 +164,10 @@ class MainMenuFrame:
         
         lbl_card_details = ctk.CTkLabel(card, text=f"Currency: {currency} | {start_date} to {end_date}", text_color="gray", font=ctk.CTkFont(size=11))
         lbl_card_details.pack(anchor="w", padx=12, pady=(8, 2))
+        
+        if self.delete_mode_on == True:
+            delete_btn = ctk.CTkButton(card, text="Delete", width=70, height=28, fg_color="#FF4D4D", hover_color="CC0000", command=delete_cmd(trips_file, trip_name))
+            
         
         btn_open = ctk.CTkButton(card, text="Open Trip", width=80, height= 28, command=click_command)
         btn_open.pack(side="right", padx=12, pady=(0, 8))
