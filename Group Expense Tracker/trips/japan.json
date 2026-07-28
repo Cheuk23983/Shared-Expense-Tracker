@@ -1,0 +1,10 @@
+{
+    "name": "Japan Holiday",
+    "base_currency": "JPY",
+    "start_date": "10/09/2026",
+    "end_date": "25/09/2026",
+    "members": [
+        "David",
+        "Emma"
+    ]
+}
