@@ -88,6 +88,12 @@ class TripCreationWindow:
         
         self.btn_create = ctk.CTkButton(self.action_btn_frame, text="Create", fg_color="#0080FF", width=100)
         self.btn_create.pack(side="right", padx=10)
+        
+        
+    def show_error(self, message):
+        '''Display error message when invalid input'''
+        messagebox.showerror("Error", message)
+    
             
 root =ctk.CTk()
 app = TripCreationWindow(root)
