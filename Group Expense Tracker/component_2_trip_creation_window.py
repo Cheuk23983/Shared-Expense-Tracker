@@ -95,6 +95,97 @@ class TripCreationWindow:
         messagebox.showerror("Error", message)
     
             
+    def add_member(self):
+        '''Add a new member to the list'''
+        input_name = self.entry_member_name.get()
+
+        if input_name == "":
+            self.show_error("Member name cannot be blank!")
+            return
+        if input_name in self.added_members:
+            self.show_error("Member is already added!")
+            return
+        
+        self.added_members.append(input_name)
+        self.entry_member_name.delete(0, "end")
+        self.update_member_list()
+        
+        
+    def update_member_list(self):
+        '''Update member list when a new member name is added.'''
+        for widget in self.memeber_list_widgets:
+            widget.destory()
+        self.memeber_list_widgets = []
+        
+        for name in self.added_members:
+            member_list = ctk.CTkFrame(self.scroll_members, fg_color="transparent")
+            member_list.pack(fill="x", pady=2)
+            
+            lbl_name = ctk.CTkLabel(member_list, text=f"{name}", font=ctk.CTkFont(size=13))
+            lbl_name.pack(side="left", padx=5)
+            
+            self.memeber_list_widgets.append(member_list)
+            
+            
+    def validate_input(self):
+        '''validating input fields before create a trip.'''
+        name = self.entry_trip_name.get()
+        start_date = self.entry_start_date.get()
+        end_date = self.entry_end_date.get()
+        
+        if name == "":
+            self.show_error("Trip name cannot be blank!")
+            return False
+        if start_date == "" or end_date == "":
+            self.show_error("Start date and End date cannot be blank!")
+            return False
+        
+        if len(self.added_members) == 0:
+            self.show_error("You must add at least 1 member to the trip!")
+            return False
+        
+        return True
+
+        
+    def create_btn_on_click(self):
+        '''save the trip data into a json file'''
+        if not self.validate_input():
+            return
+        
+        trip_name = self.entry_trip_name.get()
+        
+        if not os.path.exists(self.folder_path):
+            os.makedirs(self.folder_path)
+        
+        clean_file_name = trip_name.lower().replace(" ", "_") + ".json"
+        file_path = os.path.join(self.folder_path, clean_file_name)
+        
+        trip_data = {
+            "name": trip_name,
+            "base_currency": self.option_currency.get(),
+            "start_date": self.entry_start_date.get(),
+            "end_date": self.entry_end_date.get(),
+            "members": self.added_members,
+            "expenses": []
+        }
+        
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(trip_data, f, indent=4)
+            messagebox.showinfo("Success", f"Trip '{trip_name}', successfully created")
+        except Exception as e:
+            self.show_error(f"Could not save trip file:{e}")
+            
+    
+    def back_btn_on_click(self):
+        '''Return to the launcher window'''
+        # a message will printed in the terminal as a placeholder until componets are combined
+        print("Back to main menu")
+        
+        
+        
+    
 root =ctk.CTk()
 app = TripCreationWindow(root)
 root.mainloop()
+
