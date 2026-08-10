@@ -12,6 +12,10 @@ import fontawesome as fa
 import customtkinter as ctk
 from tkinter import messagebox
 
+# Set up app appearance
+ctk.set_appearance_mode("System")
+ctk.set_default_color_theme("blue")
+
 
 class TripDashboard:
     def __init__(self, root, file_path=None):
@@ -208,6 +212,95 @@ class TripDashboard:
 
         self.btn_manage_member = ctk.CTkButton(self.member_scrollable_box, text="Add/Remove member", height=30, command=self.manage_member_btn_on_click)
         self.btn_manage_member.pack(padx=10, pady=(0, 10))
+        
+        member_balances = {}
+        for member_name in group_members:
+            member_balances[member_name] = 0.0
+
+        for item in expenses_list:
+            payer_name = item.get("payer", "")
+            amount_paid = item.get("amount", 0.0)
+            split_list = item.get("split_between", group_members)
+
+            if payer_name in member_balances:
+                member_balances[payer_name] = member_balances[payer_name] + amount_paid
+
+            if len(split_list) > 0:
+                share_amount = amount_paid / len(split_list)
+                for person in member_balances:
+                    if person in member_balances:
+                        member_balances[person] = member_balances[person] - share_amount
+
+        for member_name in group_members:
+            net_balance = member_balances.get(member_name, 0.0)
+            if net_balance >= 0:
+                status_text = f"{member_name}: +${net_balance:.2f} (Debit)"
+                text_color_val = "#00A86B"
+            else:
+                positive_amount = net_balance * -1
+                status_text = f"{member_name}: -${positive_amount:.2f} (Credit)"
+                text_color_val = "#FF4D4D"
+
+            lbl_member_balance = ctk.CTkLabel(self.member_balance_box, text=status_text, text_color=text_color_val, font=ctk.CTkFont(size=12, weight="bold"))
+            lbl_member_balance.pack(anchor="w", padx=5, pady=3)
+
+        # settlement calculation
+        self.settlements_scroll_box.destory()
+        self.settlements_scroll_box = ctk.CTkScrollableFrame(self.settlement_box, fg_color="transparent")
+        self.settlements_scroll_box.pack(fill="both", expand=True, padx=5, pady=5)
+
+        for member_name in group_members:
+            if member_balances[member_name] < -0.01:
+                for creditor in group_members:
+                    if member_balances[creditor] > 0.01:
+                        settlement_text = f"{member_name} owes {creditor}"
+                        lbl_settlement = ctk.CTkLabel(self.settlements_scroll_box, text=settlement_text, font=ctk.CTkFont(size=12))
+                        lbl_settlement.pack(anchor="w", pady=2)
+                        break
+
+        per_person_split = total_sum / len(group_members)
+        
+        
+    def delete_expense(self, item):
+        '''Removes an expense item from the list'''
+        if item in self.trip_info_dict["expenses"]:
+            self.trip_info_dict["expenses"].remove(item)
+            self.refresh_dashboard()
+
+
+    def edit_expense_btn_on_click(self):
+        '''Action when edit expense button is clicked'''
+        # Placeholder for editing an expense
+        print("Edit expense button clicked")
+
+
+    def add_expense_btn_on_click(self):
+        '''Action when add expense button is clicked'''
+        # Placeholder for adding an expense
+        print("Add expense button clicked")
+
+
+    def save_btn_on_click(self):
+        '''Save the trip data into a json file'''
+        try:
+            with open(self.file_path, "w", encoding="utf-8") as f:
+                json.dump(self.trip_info_dict, f, indent=4)
+            messagebox.showinfo("Success", "Trip Data has been saved successfully")
+        except FileNotFoundError:
+            self.show_error("Could not find the trip file to save changes!")
+
+
+    def manage_member_btn_on_click(self):
+        '''Action when add/remove member button is clicked'''
+        # placeholder for managing members
+        print("Manage member button clicked")
+
+
+    def back_btn_on_click(self):
+        '''Return to the launcher window'''
+        # placeholder for returning to launcher window
+        print("back to main menu")
+        
 
 
 

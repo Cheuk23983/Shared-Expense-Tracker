@@ -10,6 +10,10 @@ import customtkinter as ctk
 from datetime import datetime
 from tkinter import messagebox
 
+# Set up app appearance
+ctk.set_appearance_mode("System")
+ctk.set_default_color_theme("blue")
+
 # create class for trip creation
 class TripCreationWindow:
     def __init__(self, root):
