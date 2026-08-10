@@ -1,0 +1,12 @@
+{
+    "name": "Korea@Trip",
+    "base_currency": "JPY",
+    "start_date": "01/08/2026",
+    "end_date": "01/08/2026",
+    "members": [
+        "Alice",
+        "Applr",
+        "Max"
+    ],
+    "expenses": []
+}

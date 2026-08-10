@@ -1,0 +1,18 @@
+{
+    "name": "Korea trip",
+    "base_currency": "NZD",
+    "start_date": "01/08/2026",
+    "end_date": "07/08/2026",
+    "members": [
+        "Apple",
+        "orange",
+        "Harry",
+        "Nick",
+        "Bob",
+        "Owen",
+        "Adian",
+        "Cooper",
+        "Maxx"
+    ],
+    "expenses": []
+}

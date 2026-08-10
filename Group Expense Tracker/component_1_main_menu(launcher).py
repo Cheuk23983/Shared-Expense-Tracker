@@ -158,8 +158,8 @@ class MainMenuFrame:
             ctk.set_appearance_mode("Dark")
         else:
             ctk.set_appearance_mode("Light")
-            
-            
+
+          
 # run the window
 root = ctk.CTk()
 app = MainMenuFrame(root)

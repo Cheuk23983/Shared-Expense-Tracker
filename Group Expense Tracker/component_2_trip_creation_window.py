@@ -1,13 +1,13 @@
-# Purpose: This program is to create a window for user to create a tirp JSON file to add expenses.
+# Purpose: This program is to create a window for user to create a trip JSON file to add expenses.
 # Author: Hubert Kwan
 # Date: 27/07/2026
-# Version: 1.0
-
+# Version: 1.1
 
 # import libraries and modules
 import os
 import json
 import customtkinter as ctk
+from datetime import datetime
 from tkinter import messagebox
 
 # create class for trip creation
@@ -23,14 +23,14 @@ class TripCreationWindow:
         
         # configure layout grid
         self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_rowconfigure(1, weight=2)
+        self.root.grid_columnconfigure(1, weight=2)
         
-        #Build the GUI layout
+        # Build the GUI layout
         self.create_widgets()
         
         
     def create_widgets(self):
-        '''Build the form layout and input for creaeting a trip'''
+        '''Build the form layout and input for creating a trip'''
         # title label
         self.lbl_title = ctk.CTkLabel(self.root, text="Create a Trip", font=ctk.CTkFont(size=20, weight="bold"))
         self.lbl_title.grid(row=0, column=0, columnspan=2, pady=(20,10))
@@ -69,7 +69,7 @@ class TripCreationWindow:
         self.entry_member_name = ctk.CTkEntry(self.member_input_frame, placeholder_text="Enter name", justify="center")
         self.entry_member_name.pack(side="left", fill="x", expand=True, padx=(0, 5))
         
-        self.btn_add_member = ctk.CTkButton(self.member_input_frame, text="Add", width=60)
+        self.btn_add_member = ctk.CTkButton(self.member_input_frame, text="Add", width=60, command=self.add_member)
         self.btn_add_member.pack(side="right")
         
         # scrollable frame to list all added members
@@ -83,10 +83,10 @@ class TripCreationWindow:
         self.action_btn_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         self.action_btn_frame.grid(row=8, column=0, columnspan=2, pady=(10, 20))
         
-        self.btn_back = ctk.CTkButton(self.action_btn_frame, text="Back", fg_color="grey", hover_color="#555555", width=100)
+        self.btn_back = ctk.CTkButton(self.action_btn_frame, text="Back", fg_color="grey", hover_color="#555555", width=100, command=self.back_btn_on_click)
         self.btn_back.pack(side="left", padx=10)
         
-        self.btn_create = ctk.CTkButton(self.action_btn_frame, text="Create", fg_color="#0080FF", width=100)
+        self.btn_create = ctk.CTkButton(self.action_btn_frame, text="Create", fg_color="#0080FF", width=100, command=self.create_btn_on_click)
         self.btn_create.pack(side="right", padx=10)
         
         
@@ -97,12 +97,14 @@ class TripCreationWindow:
             
     def add_member(self):
         '''Add a new member to the list'''
-        input_name = self.entry_member_name.get()
+        input_name = self.entry_member_name.get().strip()
 
         if input_name == "":
             self.show_error("Member name cannot be blank!")
             return
-        if input_name in self.added_members:
+            
+        existing_lower = [m.lower() for m in self.added_members]
+        if input_name.lower() in existing_lower:
             self.show_error("Member is already added!")
             return
         
@@ -114,30 +116,40 @@ class TripCreationWindow:
     def update_member_list(self):
         '''Update member list when a new member name is added.'''
         for widget in self.memeber_list_widgets:
-            widget.destory()
+            widget.destroy()
         self.memeber_list_widgets = []
         
         for name in self.added_members:
-            member_list = ctk.CTkFrame(self.scroll_members, fg_color="transparent")
+            member_list = ctk.CTkFrame(self.scrollable_member_frame, fg_color="transparent")
             member_list.pack(fill="x", pady=2)
             
             lbl_name = ctk.CTkLabel(member_list, text=f"{name}", font=ctk.CTkFont(size=13))
             lbl_name.pack(side="left", padx=5)
             
-            self.memeber_list_widgets.append(member_list)
-            
-            
+
     def validate_input(self):
         '''validating input fields before create a trip.'''
-        name = self.entry_trip_name.get()
-        start_date = self.entry_start_date.get()
-        end_date = self.entry_end_date.get()
+        name = self.entry_trip_name.get().strip()
+        start_date_str = self.entry_start_date.get().strip()
+        end_date_str = self.entry_end_date.get().strip()
         
         if name == "":
             self.show_error("Trip name cannot be blank!")
             return False
-        if start_date == "" or end_date == "":
+            
+        if start_date_str == "" or end_date_str == "":
             self.show_error("Start date and End date cannot be blank!")
+            return False
+            
+        try:
+            start_date = datetime.strptime(start_date_str, "%d/%m/%Y")
+            end_date = datetime.strptime(end_date_str, "%d/%m/%Y")
+
+            if end_date < start_date:
+                self.show_error("End date cannot be before start date!")
+                return False
+        except ValueError:
+            self.show_error("Dates must be in dd/mm/yyyy format!")
             return False
         
         if len(self.added_members) == 0:
@@ -152,7 +164,7 @@ class TripCreationWindow:
         if not self.validate_input():
             return
         
-        trip_name = self.entry_trip_name.get()
+        trip_name = self.entry_trip_name.get().strip()
         
         if not os.path.exists(self.folder_path):
             os.makedirs(self.folder_path)
@@ -160,11 +172,19 @@ class TripCreationWindow:
         clean_file_name = trip_name.lower().replace(" ", "_") + ".json"
         file_path = os.path.join(self.folder_path, clean_file_name)
         
+        if os.path.exists(file_path):
+            confirm = messagebox.askyesno(
+                "Overwrite Warning", 
+                f"A trip named '{trip_name}' already exists!\nDo you want to overwrite it?"
+            )
+            if not confirm:
+                return
+        
         trip_data = {
             "name": trip_name,
             "base_currency": self.option_currency.get(),
-            "start_date": self.entry_start_date.get(),
-            "end_date": self.entry_end_date.get(),
+            "start_date": self.entry_start_date.get().strip(),
+            "end_date": self.entry_end_date.get().strip(),
             "members": self.added_members,
             "expenses": []
         }
@@ -179,13 +199,10 @@ class TripCreationWindow:
     
     def back_btn_on_click(self):
         '''Return to the launcher window'''
-        # a message will printed in the terminal as a placeholder until componets are combined
+        # currently its a palceholder that will printed a message in terminal 
         print("Back to main menu")
         
         
-        
-    
-root =ctk.CTk()
+root = ctk.CTk()
 app = TripCreationWindow(root)
 root.mainloop()
-

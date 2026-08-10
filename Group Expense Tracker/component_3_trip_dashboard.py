@@ -152,7 +152,13 @@ class TripDashboard:
         self.settlements_scroll_box = ctk.CTkScrollableFrame(self.settlement_box, fg_color="transparent")
         self.settlements_scroll_box.pack(fill="both", expand=True, padx=5, pady=5)
 
-        # self.refresh_dashboard()
+      # self.refresh_dashboard()
+
+
+    def show_error(self, message):
+        '''Display error message when invalid input'''
+        messagebox.showerror("Error", message)
+    
         
     def refresh_dashboard(self):
         '''refresh money details, transaction table, member balance, and settlement'''
@@ -160,7 +166,51 @@ class TripDashboard:
         expenses_list = self.trip_info_dict.get("expenses", [])
         currency = self.trip_info_dict.get("base_currency", "NZD")
         group_members = self.trip_info_dict.get("members", [])
-        
+
+        total_sum = 0.0
+        for item in expenses_list:
+            total_sum= total_sum + item["amount"]
+
+        self.lbl_total_cost.configure(text=f"Total Cost: ${total_sum:.2f} ({currency})")
+
+        self.transactions_scrollable_frame.destroy()
+        self.transactions_scrollable_frame = ctk.CTkScrollableFrame(self.table_container_frame)
+        self.transactions_scrollable_frame.grid(row=1, column=0, sticky="nsew")
+
+        for item in expenses_list:
+            row_frame = ctk.CTkFrame(self.transactions_scrollable_frame, fg_color="transparent")
+            row_frame.pack(fill="x", pady=2)
+
+            lbl_date = ctk.CTkLabel(row_frame, text=item.get("date", "N/A"), width=70)
+            lbl_date.pack(side="left", padx=5)
+
+            lbl_description = ctk.CTkLabel(row_frame, text=item.get("description", "No description"))
+            lbl_description.pack(side="left", padx=5)
+
+            lbl_category = ctk.CTkLabel(row_frame, text=item.get("category", "other"), width=70)
+            lbl_category.pack(side="side", padx=5)
+
+            lbl_payer = ctk.CTkLabel(row_frame, text=item.get("payer", "other"), width=70)
+            lbl_payer.pack(side="left", padx=5)
+
+            lbl_amount = ctk.CTkLabel(row_frame, text=item.get("amount", 0.0), width=70)
+            lbl_amount.pack(side="left",  padx=5)
+
+            btn_delete = ctk.CTkButton(row_frame, text="🗑", width=26, fg_color="grey", hover_color="#555555", command=lambda x=item: self.delete_expense(x))
+            btn_delete.pack(side="right", padx=2)
+
+            btn_edit = ctk.CTkLabel(row_frame, text="✏️", width=26, command=lambda x=item: self.edit_expense_btn_on_click(x))
+            btn_edit.pack(side="right", padx=2)
+
+        self.member_scrollable_box.destroy()
+        self.member_scrollable_box = ctk.CTkScrollableFrame(self.member_balance_box, fg_color="transparent")
+        self.member_scrollable_box.pack(fill="both", expand=True, padx=5, pady=5)
+
+        self.btn_manage_member = ctk.CTkButton(self.member_scrollable_box, text="Add/Remove member", height=30, command=self.manage_member_btn_on_click)
+        self.btn_manage_member.pack(padx=10, pady=(0, 10))
+
+
+
 root = ctk.CTk()
 app = TripDashboard(root)
 root.mainloop()

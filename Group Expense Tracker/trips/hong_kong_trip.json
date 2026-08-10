@@ -1,0 +1,10 @@
+{
+    "name": "hong kong trip",
+    "base_currency": "NZD",
+    "start_date": "29/02/2028",
+    "end_date": "03/03/2028",
+    "members": [
+        "alice"
+    ],
+    "expenses": []
+}
