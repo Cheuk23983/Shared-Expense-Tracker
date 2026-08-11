@@ -203,15 +203,3 @@ class ExpenseFormWindow:
 root = ctk.CTk()
 app = ExpenseFormWindow(root)
 root.mainloop()
-
-                
-                
-                
-        
-            
-            
-        
-
-root = ctk.CTk()
-app = ExpenseFormWindow(root)
-root.mainloop()
