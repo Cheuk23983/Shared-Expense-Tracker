@@ -1,10 +1,89 @@
 {
-    "name": "Japan Holiday",
-    "base_currency": "JPY",
-    "start_date": "10/09/2026",
-    "end_date": "25/09/2026",
+    "name": "Japan Trip",
+    "base_currency": "NZD",
+    "start_date": "01/09/2026",
+    "end_date": "10/09/2026",
     "members": [
-        "David",
-        "Emma"
+        "Alice",
+        "Bob",
+        "Charlie",
+        "Harry"
+    ],
+    "expenses": [
+        {
+            "title": "Dinner in Sushiro",
+            "description": "Dinner in Sushiro",
+            "amount": 180.0,
+            "date": "02/09/2026",
+            "category": "Food",
+            "payer": "Alice",
+            "split_between": [
+                "Alice",
+                "Bob",
+                "Charlie",
+                "Harry"
+            ],
+            "share_per_person": 45.0
+        },
+        {
+            "title": "Shinkansen Bullet Train",
+            "description": "Shinkansen Bullet Train",
+            "amount": 320.5,
+            "date": "03/09/2026",
+            "category": "Transport",
+            "payer": "Bob",
+            "split_between": [
+                "Alice",
+                "Bob",
+                "Charlie",
+                "Harry"
+            ],
+            "share_per_person": 80.125
+        },
+        {
+            "title": "Tokyo Hotel Booking",
+            "description": "Tokyo Hotel Booking",
+            "amount": 850.0,
+            "date": "04/09/2026",
+            "category": "Accommodation",
+            "payer": "Charlie",
+            "split_between": [
+                "Alice",
+                "Bob",
+                "Charlie",
+                "Harry"
+            ],
+            "share_per_person": 212.5
+        },
+        {
+            "title": "Universal Studios Tickets",
+            "description": "Universal Studios Tickets",
+            "amount": 440.0,
+            "date": "06/09/2026",
+            "category": "Activities",
+            "payer": "Harry",
+            "split_between": [
+                "Alice",
+                "Bob",
+                "Charlie",
+                "Harry"
+            ],
+            "share_per_person": 110.0
+        },
+        {
+            "title": "7-Eleven Snacks",
+            "description": "7-Eleven Snacks",
+            "amount": 25.4,
+            "date": "07/09/2026",
+            "category": "Food",
+            "payer": "Alice",
+            "split_between": [
+                "Alice",
+                "Bob",
+                "Charlie",
+                "Harry"
+            ],
+            "share_per_person": 6.35
+        }
     ]
 }
