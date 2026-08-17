@@ -1,7 +1,9 @@
 # Purpose: This program is to create a window for user to create a trip JSON file to add expenses.
 # Author: Hubert Kwan
 # Date: 27/07/2026
-# Version: 1.1
+# Version: 1.2
+
+# This version has implement a callback funtion which controlled by the main program.
 
 # import libraries and modules
 import os
@@ -16,15 +18,20 @@ ctk.set_default_color_theme("blue")
 
 # create class for trip creation
 class TripCreationWindow:
-    def __init__(self, root):
+    # mode="create_trip" is a parameter to call the class in main program.
+    def __init__(self, root, mode="create_trip", file_path=None):
         self.root = root
+        self.mode = mode
+        self.file_path = file_path
         self.root.title("Trip Creation Window")
         self.root.geometry("450x650")
         
         self.folder_path = "trips"
         self.added_members = []
         self.memeber_list_widgets = []
-        
+         # callback function assigned from main program
+        self.on_back_callback = None
+        self.on_trip_created_callback = None        
         # configure layout grid
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_columnconfigure(1, weight=2)
@@ -129,7 +136,7 @@ class TripCreationWindow:
             
             lbl_name = ctk.CTkLabel(member_list, text=f"{name}", font=ctk.CTkFont(size=13))
             lbl_name.pack(side="left", padx=5)
-            
+            self.memeber_list_widgets.append(member_list)
 
     def validate_input(self):
         '''validating input fields before create a trip.'''
@@ -197,16 +204,24 @@ class TripCreationWindow:
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(trip_data, f, indent=4)
             messagebox.showinfo("Success", f"Trip '{trip_name}', successfully created")
-        except Exception as e:
-            self.show_error(f"Could not save trip file:{e}")
+            
+            # pass the file path to main program and open trip dashboard.
+            if self.on_trip_created_callback:
+                self.on_trip_created_callback(file_path)
+        except FileNotFoundError:
+            self.show_error(f"Could not save trip file:{file_path}")
             
     
     def back_btn_on_click(self):
         '''Return to the launcher window'''
-        # currently its a palceholder that will printed a message in terminal 
-        print("Back to main menu")
+        if self.on_back_callback:
+            self.on_back_callback()
+        else:
+            print("Back to main menu")
         
-        
-root = ctk.CTk()
-app = TripCreationWindow(root)
-root.mainloop()
+
+# run the current window
+# comment out the window runner which only display the window when called in main program.
+# root = ctk.CTk()
+# app = TripCreationWindow(root)
+# root.mainloop()

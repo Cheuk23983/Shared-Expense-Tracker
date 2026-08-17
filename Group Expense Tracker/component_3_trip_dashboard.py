@@ -1,8 +1,9 @@
 # Purpose: This part of the component is to display detail of a chosen trip on the launcher, like the transactions, settlement, and member balance etc.
 # Author: Hubert Kwan
 # Date: 04/08/2026
-# Version: 1.0
+# Version: 1.1
 
+# This version has implement a callback funtion which controlled by the main program.
 
 # import libraries and modules
 import os
@@ -27,6 +28,12 @@ class TripDashboard:
         
         self.file_path = file_path
         self.trip_info_dict = {}
+        
+        # callback function assigned from main program
+        self.add_expense_btn_on_click_callback = None
+        self.edit_expense_btn_on_click_callback = None
+        self.manage_member_btn_on_click_callback = None
+        self.back_btn_on_click_callback = None
 
         # Load PNG button icons using PIL for action buttons
         self.delete_icon = ctk.CTkImage(
@@ -60,7 +67,7 @@ class TripDashboard:
             self.show_error(f"Could not find trip file '{self.file_path}'!")
 
     def create_widgets(self):
-        '''creates trip dashbaord layout'''
+        '''creates trip dashboard layout'''
         # top title frame (trip name & reutrn button)
         self.top_title_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         self.top_title_frame.grid(row=0, column=0, padx=20, pady=(15, 0), sticky="ew")
@@ -115,6 +122,7 @@ class TripDashboard:
         self.btn_manage_member = ctk.CTkButton(self.member_scrollable_box, text="Add/Remove member", height=30)
         self.btn_manage_member.pack(padx=10)
         
+        # expenses table frame container
         self.table_container_frame = ctk.CTkFrame(self.lower_split_frame, fg_color="transparent")
         self.table_container_frame.grid(row=0, column=1, sticky="nsew")
         self.table_container_frame.grid_columnconfigure(0, weight=1)
@@ -142,7 +150,7 @@ class TripDashboard:
         lbl_header_action = ctk.CTkLabel(self.table_header_frame, text="Action", width=60, anchor="center", font=ctk.CTkFont(size=12, weight="bold"))
         lbl_header_action.pack(side="left", padx=5, pady=5)
         
-        
+         # Scrollable container for transaction rows
         self.transactions_scrollable_frame = ctk.CTkScrollableFrame(self.table_container_frame)
         self.transactions_scrollable_frame.grid(row=1, column=0, sticky="nsew")
         
@@ -155,6 +163,7 @@ class TripDashboard:
         self.btn_save_changes = ctk.CTkButton(self.right_frame, text="✔ Save Changes", fg_color="#00a86b", height=35, command=self.save_btn_on_click)
         self.btn_save_changes.pack(fill="x", pady=(0, 15))
         
+        # Settlement box frame
         self.settlement_box = ctk.CTkFrame(self.right_frame, corner_radius=10)
         self.settlement_box.pack(fill="both", expand=True)
 
@@ -184,12 +193,15 @@ class TripDashboard:
         currency = self.trip_info_dict.get("base_currency", "NZD")
         group_members = self.trip_info_dict.get("members", [])
 
+        # Calculate totl cost from all expenses amount
         total_sum = 0.0
         for item in expenses_list:
-            total_sum= total_sum + item.get("amount", 0.0)
+            total_sum = total_sum + item.get("amount", 0.0)
 
+        # update header total text
         self.lbl_total_cost.configure(text=f"Total Cost: ${total_sum:.2f} ({currency})")
 
+        # clear transactions frame with winfo_children
         for child in self.transactions_scrollable_frame.winfo_children():
             child.destroy()
 
@@ -209,8 +221,8 @@ class TripDashboard:
             lbl_payer = ctk.CTkLabel(row_frame, text=item.get("payer", "other"), width=75, anchor="w")
             lbl_payer.pack(side="left", padx=5)
 
-            lbl_amount = ctk.CTkLabel(row_frame, text=item.get("amount", 0.0), width=75, anchor="w")
-            lbl_amount.pack(side="left",  padx=5)
+            lbl_amount = ctk.CTkLabel(row_frame, text=f"${item.get('amount', 0.0):.2f}", width=75, anchor="w")
+            lbl_amount.pack(side="left", padx=5)
 
             # Actions frame holding edit and delete buttons (fixed 60px width)
             action_frame = ctk.CTkFrame(row_frame, fg_color="transparent", width=60)
@@ -229,10 +241,12 @@ class TripDashboard:
         self.btn_manage_member = ctk.CTkButton(self.member_scrollable_box, text="Add/Remove member", height=30, command=self.manage_member_btn_on_click)
         self.btn_manage_member.pack(padx=10, pady=(0, 10))
         
+        # Initialise net balance dictionary for each member
         member_balances = {}
         for member_name in group_members:
             member_balances[member_name] = 0.0
 
+        # Calculate debit and credit splits per member
         for item in expenses_list:
             payer_name = item.get("payer", "")
             amount_paid = item.get("amount", 0.0)
@@ -260,7 +274,7 @@ class TripDashboard:
             lbl_member_balance = ctk.CTkLabel(self.member_scrollable_box, text=status_text, text_color=text_color_val, font=ctk.CTkFont(size=12, weight="bold"))
             lbl_member_balance.pack(anchor="w", padx=5, pady=3)
 
-        # settlement calculation
+        # clear settlement box using winfo_children method
         for child in self.settlements_scroll_box.winfo_children():
             child.destroy()
 
@@ -289,15 +303,19 @@ class TripDashboard:
 
 
     def edit_expense_btn_on_click(self, item=None):
-        '''Action when edit expense button is clicked'''
-        # Placeholder for editing an expense
-        print("Edit expense button clicked")
-
-
+            '''Action when edit expense button is clicked'''
+            if self.edit_expense_btn_on_click_callback:
+                self.edit_expense_btn_on_click_callback(item)
+            else:
+                print("Edit expense button clicked")
+    
     def add_expense_btn_on_click(self):
         '''Action when add expense button is clicked'''
-        # Placeholder for adding an expense
-        print("Add expense button clicked")
+        if self.add_expense_btn_on_click_callback:
+            self.add_expense_btn_on_click_callback()
+        else:
+            print("Add expense button clicked")
+
         
     
     def save_trip_data(self):
@@ -316,18 +334,22 @@ class TripDashboard:
 
 
     def manage_member_btn_on_click(self):
-        '''Action when add/remove member button is clicked'''
-        # placeholder for managing members
-        print("Manage member button clicked")
-
-
+            '''Action when add/remove member button is clicked'''
+            if self.manage_member_btn_on_click_callback:
+                self.manage_member_btn_on_click_callback()
+            else:
+                print("Manage member button clicked")
+    
     def back_btn_on_click(self):
         '''Return to the launcher window'''
-        # placeholder for returning to launcher window
-        print("back to main menu")
+        if self.back_btn_on_click_callback:
+            self.back_btn_on_click_callback()
+        else:
+            print("back to main menu")
         
 
-
-root = ctk.CTk()
-app = TripDashboard(root)
-root.mainloop()
+# run the current window
+# comment out the window runner which only display the window when called in main program.
+# root = ctk.CTk()
+# app = TripDashboard(root)
+# root.mainloop()
