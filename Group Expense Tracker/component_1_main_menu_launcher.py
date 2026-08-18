@@ -1,9 +1,9 @@
 # Purpose: This program is the first component of the tracker project. The Component included function to manage trips. 
 # Author: Hubert Kwan
-# Date: 18/08/2026
-# Version: 1.3
+# Date: 19/08/2026
+# Version: 2.0
 
-# This version  fixed bugs and error occurs when connecting to the main program
+# This version included improvements for component 1
 
 # import customtkinter module
 import customtkinter as ctk
@@ -64,6 +64,13 @@ class MainMenuFrame:
         
         self.theme_switch = ctk.CTkSwitch(self.bottom_frame, text="Light/Dark Mode", command=self.toggle_theme)
         self.theme_switch.pack(side="left")
+        
+        # Enusure the appearance mode being consistent across all screen.
+        current_mode = ctk.get_appearance_mode()
+        if current_mode == "Dark":
+            self.theme_switch.select()
+        else:
+            self.theme_switch.deselect()
 
         # Load data on startup
         self.load_and_display_trip()
@@ -128,8 +135,8 @@ class MainMenuFrame:
             try:
                 with open(trip, "r", encoding="utf-8") as f:
                     trip_data = json.load(f)
-            except Exception:
-                messagebox.showerror("Error", f"Could not read file {trip}")
+            except FileNotFoundError:
+                messagebox.showerror("Error", f"Could not find file {trip}")
                 continue
             
             trip_name = trip_data.get("name", "Unnamed Trip")

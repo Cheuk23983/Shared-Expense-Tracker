@@ -1,9 +1,9 @@
 # Purpose: This part of the component is to display detail of a chosen trip on the launcher, like the transactions, settlement, and member balance etc.
 # Author: Hubert Kwan
-# Date: 18/08/2026
-# Version: 1.2
+# Date: 19/08/2026
+# Version: 2.0
 
-# This version include fixed bugs and error when intergrate with the main program
+
 
 # import libraries and modules
 import os
@@ -33,6 +33,7 @@ class TripDashboard:
         self.add_expense_btn_on_click_callback = None
         self.edit_expense_btn_on_click_callback = None
         self.manage_member_btn_on_click_callback = None
+        self.edit_trip_details_callback = None
         self.back_btn_on_click_callback = None
 
         # Load PNG button icons using PIL for action buttons
@@ -75,14 +76,29 @@ class TripDashboard:
 
     def create_widgets(self):
         '''creates trip dashboard layout'''
-        # top title frame (trip name & return button)
+        # top title frame (trip name, pencil edit button, & return button)
         self.top_title_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         self.top_title_frame.grid(row=0, column=0, padx=20, pady=(15, 0), sticky="ew")
         
         trip_name = self.trip_info_dict.get("name", "Trip Dashboard")
         self.lbl_trip_title = ctk.CTkLabel(self.top_title_frame, text=f"Trip: {trip_name}", font=ctk.CTkFont(size=20, weight="bold"))
         self.lbl_trip_title.pack(side="left")
+
+        if self.edit_icon != None:
+            self.btn_edit_trip_details = ctk.CTkButton(self.top_title_frame, text="", image=self.edit_icon, width=28, height=28, fg_color="transparent", hover_color="#E0E0E0", command=self.edit_trip_click)
+        else:
+            self.btn_edit_trip_details = ctk.CTkButton(self.top_title_frame, text="✏", width=28, height=28, fg_color="transparent", hover_color="#E0E0E0", command=self.edit_trip_click)
+        self.btn_edit_trip_details.pack(side="left", padx=8)
+
+        self.theme_switch = ctk.CTkSwitch(self.top_title_frame, text="Light/Dark Mode", command=self.toggle_theme)
+        self.theme_switch.pack(side="right", padx=10)
         
+        current_mode = ctk.get_appearance_mode()
+        if current_mode == "Dark":
+            self.theme_switch.select()
+        else:
+            self.theme_switch.deselect()
+
         self.btn_back = ctk.CTkButton(self.top_title_frame, text="Back", width=80, fg_color="gray", hover_color="#555555", command=self.back_btn_on_click)
         self.btn_back.pack(side="right")
         
@@ -97,18 +113,35 @@ class TripDashboard:
         self.middle_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.middle_frame.grid(row=0, column=0, padx=(0, 10), sticky="nsew")
         self.middle_frame.grid_columnconfigure(0, weight=1)
-        self.middle_frame.grid_rowconfigure(1, weight=1)
+        self.middle_frame.grid_rowconfigure(2, weight=1)
         
         # total cost banner
-        self.total_cost_box = ctk.CTkFrame(self.middle_frame, height=50, corner_radius=8)
-        self.total_cost_box.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        self.total_cost_box = ctk.CTkFrame(self.middle_frame, height=45, corner_radius=8)
+        self.total_cost_box.grid(row=0, column=0, sticky="ew", pady=(0, 6))
         
         self.lbl_total_cost = ctk.CTkLabel(self.total_cost_box, text="Total Cost: $0.00", font=ctk.CTkFont(size=18, weight="bold"))
-        self.lbl_total_cost.pack(side="left", padx=15, pady=10)
+        self.lbl_total_cost.pack(side="left", padx=15, pady=8)
         
+        self.search_filter_frame = ctk.CTkFrame(self.middle_frame, fg_color="transparent")
+        self.search_filter_frame.grid(row=1, column=0, sticky="ew", pady=(0, 6))
+
+        self.entry_search_keyword = ctk.CTkEntry(self.search_filter_frame, placeholder_text="Search title or date...", width=160)
+        self.entry_search_keyword.pack(side="left", padx=(0, 5))
+        self.entry_search_keyword.bind("<KeyRelease>", lambda e: self.refresh_dashboard())
+
+        self.option_filter_category = ctk.CTkOptionMenu(
+            self.search_filter_frame, 
+            values=["All Categories", "Food", "Transport", "Accommodation", "Activities", "Other"],
+            command=lambda v: self.refresh_dashboard()
+        )
+        self.option_filter_category.pack(side="left", padx=5)
+
+        self.btn_clear_filter = ctk.CTkButton(self.search_filter_frame, text="Clear", width=60, fg_color="gray", command=self.clear_filter_click)
+        self.btn_clear_filter.pack(side="left", padx=5)
+
         # lower split container
         self.lower_split_frame = ctk.CTkFrame(self.middle_frame, fg_color="transparent")
-        self.lower_split_frame.grid(row=1, column=0, sticky="nsew")
+        self.lower_split_frame.grid(row=2, column=0, sticky="nsew")
         self.lower_split_frame.grid_columnconfigure(0, weight=1)
         self.lower_split_frame.grid_columnconfigure(1, weight=3)
         self.lower_split_frame.grid_rowconfigure(0, weight=1)
@@ -166,7 +199,7 @@ class TripDashboard:
         self.settlement_box = ctk.CTkFrame(self.right_frame, corner_radius=10)
         self.settlement_box.pack(fill="both", expand=True)
 
-        self.lbl_settle_title = ctk.CTkLabel(self.settlement_box, text="Simplified Settlement", font=ctk.CTkFont(size=14, weight="bold"))
+        self.lbl_settle_title = ctk.CTkLabel(self.settlement_box, text="Settlement Breakdown", font=ctk.CTkFont(size=14, weight="bold"))
         self.lbl_settle_title.pack(pady=10)
 
         self.settlements_scroll_box = ctk.CTkScrollableFrame(self.settlement_box, fg_color="transparent")
@@ -174,12 +207,28 @@ class TripDashboard:
 
         self.refresh_dashboard()
 
+    def edit_trip_click(self):
+        if self.edit_trip_details_callback:
+            self.edit_trip_details_callback()
+
+    def clear_filter_click(self):
+        self.entry_search_keyword.delete(0, "end")
+        self.option_filter_category.set("All Categories")
+        self.refresh_dashboard()
+
+    def toggle_theme(self):
+        '''Toggles Light/Dark mode globally'''
+        if self.theme_switch.get() == 1:
+            ctk.set_appearance_mode("Dark")
+        else:
+            ctk.set_appearance_mode("Light")
+
     def show_error(self, message):
         '''Display error message when invalid input'''
         messagebox.showerror("Error", message, parent=self.root)
         
     def refresh_dashboard(self):
-        '''refresh money details, transaction table, member balance, and settlement'''
+        '''refresh money details, filtered transaction table, member balance, and settlement'''
         expenses_list = self.trip_info_dict.get("expenses", [])
         currency = self.trip_info_dict.get("base_currency", "NZD")
         group_members = self.trip_info_dict.get("members", [])
@@ -194,45 +243,70 @@ class TripDashboard:
         for child in self.transactions_scrollable_frame.winfo_children():
             child.destroy()
 
+        # Get search and filter inputs
+        search_kw = self.entry_search_keyword.get().strip().lower()
+        filter_cat = self.option_filter_category.get()
+
         for item in expenses_list:
-            row_frame = ctk.CTkFrame(self.transactions_scrollable_frame, fg_color="transparent")
-            row_frame.pack(fill="x", pady=2)
+            item_title = item.get("title", item.get("description", "")).lower()
+            item_date = item.get("date", "").lower()
+            item_category = item.get("category", "Other")
 
-            lbl_date = ctk.CTkLabel(row_frame, text=item.get("date", "N/A"), width=85, anchor="w")
-            lbl_date.pack(side="left", padx=(5, 5))
+            # Check keyword match
+            keyword_match = False
+            if search_kw == "":
+                keyword_match = True
+            elif search_kw in item_title:
+                keyword_match = True
+            elif search_kw in item_date:
+                keyword_match = True
 
-            lbl_description = ctk.CTkLabel(row_frame, text=item.get("title", item.get("description", "No description")), width=160, anchor="w")
-            lbl_description.pack(side="left", padx=5)
+            # Check category match
+            category_match = False
+            if filter_cat == "All Categories":
+                category_match = True
+            elif filter_cat == item_category:
+                category_match = True
 
-            lbl_category = ctk.CTkLabel(row_frame, text=item.get("category", "other"), width=110, anchor="w")
-            lbl_category.pack(side="left", padx=5)
+            if keyword_match == True and category_match == True:
+                row_frame = ctk.CTkFrame(self.transactions_scrollable_frame, fg_color="transparent")
+                row_frame.pack(fill="x", pady=2)
 
-            lbl_payer = ctk.CTkLabel(row_frame, text=item.get("payer", "other"), width=75, anchor="w")
-            lbl_payer.pack(side="left", padx=5)
+                lbl_date = ctk.CTkLabel(row_frame, text=item.get("date", "N/A"), width=85, anchor="w")
+                lbl_date.pack(side="left", padx=(5, 5))
 
-            lbl_amount = ctk.CTkLabel(row_frame, text=f"${item.get('amount', 0.0):.2f}", width=75, anchor="w")
-            lbl_amount.pack(side="left", padx=5)
+                lbl_description = ctk.CTkLabel(row_frame, text=item.get("title", item.get("description", "No description")), width=160, anchor="w")
+                lbl_description.pack(side="left", padx=5)
 
-            action_frame = ctk.CTkFrame(row_frame, fg_color="transparent", width=60)
-            action_frame.pack(side="left", padx=5)
+                lbl_category = ctk.CTkLabel(row_frame, text=item.get("category", "other"), width=110, anchor="w")
+                lbl_category.pack(side="left", padx=5)
 
-            def make_edit_cmd(expense_item):
-                return lambda: self.edit_expense_btn_on_click(expense_item)
+                lbl_payer = ctk.CTkLabel(row_frame, text=item.get("payer", "other"), width=75, anchor="w")
+                lbl_payer.pack(side="left", padx=5)
 
-            def make_delete_cmd(expense_item):
-                return lambda: self.delete_expense(expense_item)
+                lbl_amount = ctk.CTkLabel(row_frame, text=f"${item.get('amount', 0.0):.2f}", width=75, anchor="w")
+                lbl_amount.pack(side="left", padx=5)
 
-            if self.edit_icon != None:
-                btn_edit = ctk.CTkButton(action_frame, text="", image=self.edit_icon, width=24, height=24, fg_color="transparent", hover_color="#E0E0E0", command=make_edit_cmd(item))
-            else:
-                btn_edit = ctk.CTkButton(action_frame, text="Edit", width=24, height=24, fg_color="transparent", hover_color="#E0E0E0", command=make_edit_cmd(item))
-            btn_edit.pack(side="left", padx=1)
+                action_frame = ctk.CTkFrame(row_frame, fg_color="transparent", width=60)
+                action_frame.pack(side="left", padx=5)
 
-            if self.delete_icon != None:
-                btn_delete = ctk.CTkButton(action_frame, text="", image=self.delete_icon, width=24, height=24, fg_color="transparent", hover_color="#FFE5E5", command=make_delete_cmd(item))
-            else:
-                btn_delete = ctk.CTkButton(action_frame, text="X", width=24, height=24, fg_color="transparent", hover_color="#FFE5E5", command=make_delete_cmd(item))
-            btn_delete.pack(side="left", padx=1)
+                def make_edit_cmd(expense_item):
+                    return lambda: self.edit_expense_btn_on_click(expense_item)
+
+                def make_delete_cmd(expense_item):
+                    return lambda: self.delete_expense(expense_item)
+
+                if self.edit_icon != None:
+                    btn_edit = ctk.CTkButton(action_frame, text="", image=self.edit_icon, width=24, height=24, fg_color="transparent", hover_color="#E0E0E0", command=make_edit_cmd(item))
+                else:
+                    btn_edit = ctk.CTkButton(action_frame, text="Edit", width=24, height=24, fg_color="transparent", hover_color="#E0E0E0", command=make_edit_cmd(item))
+                btn_edit.pack(side="left", padx=1)
+
+                if self.delete_icon != None:
+                    btn_delete = ctk.CTkButton(action_frame, text="", image=self.delete_icon, width=24, height=24, fg_color="transparent", hover_color="#FFE5E5", command=make_delete_cmd(item))
+                else:
+                    btn_delete = ctk.CTkButton(action_frame, text="X", width=24, height=24, fg_color="transparent", hover_color="#FFE5E5", command=make_delete_cmd(item))
+                btn_delete.pack(side="left", padx=1)
 
         for child in self.member_scrollable_box.winfo_children():
             child.destroy()
@@ -248,15 +322,21 @@ class TripDashboard:
             payer_name = item.get("payer", "")
             amount_paid = item.get("amount", 0.0)
             split_list = item.get("split_between", group_members)
+            custom_dict = item.get("custom_shares", {})
 
             if payer_name in member_balances:
                 member_balances[payer_name] = member_balances[payer_name] + amount_paid
 
-            if len(split_list) > 0:
-                share_amount = amount_paid / len(split_list)
-                for person in split_list:
-                    if person in member_balances:
-                        member_balances[person] = member_balances[person] - share_amount
+            if len(custom_dict) > 0:
+                for person_name, share_val in custom_dict.items():
+                    if person_name in member_balances:
+                        member_balances[person_name] = member_balances[person_name] - share_val
+            else:
+                if len(split_list) > 0:
+                    share_amount = amount_paid / len(split_list)
+                    for person in split_list:
+                        if person in member_balances:
+                            member_balances[person] = member_balances[person] - share_amount
 
         for member_name in group_members:
             net_balance = member_balances.get(member_name, 0.0)
@@ -274,14 +354,33 @@ class TripDashboard:
         for child in self.settlements_scroll_box.winfo_children():
             child.destroy()
 
-        for member_name in group_members:
-            if member_balances[member_name] < -0.01:
-                for creditor in group_members:
-                    if member_balances[creditor] > 0.01:
-                        settlement_text = f"{member_name} owes {creditor}"
-                        lbl_settlement = ctk.CTkLabel(self.settlements_scroll_box, text=settlement_text, font=ctk.CTkFont(size=12))
-                        lbl_settlement.pack(anchor="w", pady=2)
-                        break
+        debtors = []
+        creditors = []
+        for name, bal in member_balances.items():
+            if bal < -0.01:
+                debtors.append([name, abs(bal)])
+            elif bal > 0.01:
+                creditors.append([name, bal])
+
+        for debtor in debtors:
+            d_name = debtor[0]
+            d_amount = debtor[1]
+            for creditor in creditors:
+                c_name = creditor[0]
+                c_amount = creditor[1]
+
+                if d_amount > 0 and c_amount > 0:
+                    if d_amount < c_amount:
+                        settle_val = d_amount
+                    else:
+                        settle_val = c_amount
+
+                    d_amount = d_amount - settle_val
+                    creditor[1] = creditor[1] - settle_val
+
+                    settlement_text = f"{d_name} owes {c_name} ${settle_val:.2f}"
+                    lbl_settlement = ctk.CTkLabel(self.settlements_scroll_box, text=settlement_text, font=ctk.CTkFont(size=12))
+                    lbl_settlement.pack(anchor="w", pady=2)
 
     def delete_expense(self, item):
         '''Removes an expense item from the list'''

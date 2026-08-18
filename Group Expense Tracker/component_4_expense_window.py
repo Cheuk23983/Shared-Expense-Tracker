@@ -15,6 +15,13 @@ from datetime import datetime
 import customtkinter as ctk
 from tkinter import messagebox
 
+# Optional import for DatePicker extension
+try:
+    from tkcalendar import DateEntry
+    HAS_TKCALENDAR = True
+except ImportError:
+    HAS_TKCALENDAR = False
+
 # Set up app appearance
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -32,6 +39,8 @@ class ExpenseFormWindow:
         self.trip_info_dict = {}
         self.members_list = []
         self.checkbox_widget = {}
+        self.custom_entry_widget = {}
+        self.manual_split_mode = False
         
         if self.file_path != None and os.path.exists(self.file_path) == True:
             self.load_trip_file()
@@ -78,12 +87,19 @@ class ExpenseFormWindow:
         self.entry_amount = ctk.CTkEntry(self.root, placeholder_text="e.g. $50", justify="center")
         self.entry_amount.grid(row=4, column=0, columnspan=2, padx=20, pady=(0, 8), sticky="ew")
         
-        # Date & Category
-        self.lbl_date = ctk.CTkLabel(self.root, text="Date", font=ctk.CTkFont(size=15, weight="bold"))
+        self.lbl_date = ctk.CTkLabel(self.root, text="Date (Within Trip Period)", font=ctk.CTkFont(size=15, weight="bold"))
         self.lbl_date.grid(row=5, column=0, padx=(20, 5), pady=(5, 2), sticky="w")
-        self.entry_date = ctk.CTkEntry(self.root, placeholder_text="dd/mm/yyyy", justify="center")
-        self.entry_date.grid(row=6, column=0, padx=(20, 5), pady=(0, 8), sticky="ew")
         
+        self.date_input_frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        self.date_input_frame.grid(row=6, column=0, padx=(20, 5), pady=(0, 8), sticky="ew")
+        
+        self.entry_date = ctk.CTkEntry(self.date_input_frame, placeholder_text="dd/mm/yyyy", justify="center")
+        self.entry_date.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        
+        self.btn_pick_date = ctk.CTkButton(self.date_input_frame, text="📅", width=35, command=lambda: self.open_date_picker(self.entry_date))
+        self.btn_pick_date.pack(side="right")
+        
+        # Category
         self.lbl_category = ctk.CTkLabel(self.root, text="Category", font=ctk.CTkFont(size=15, weight="bold"))
         self.lbl_category.grid(row=5, column=1, padx=(5, 20), pady=(5, 2), sticky="w")
         self.combo_category = ctk.CTkOptionMenu(self.root, values=["Food", "Transport", "Accommodation", "Activities", "Other"])
@@ -99,40 +115,35 @@ class ExpenseFormWindow:
             payer_options = ["No member found."]
             
         self.combo_payer = ctk.CTkOptionMenu(self.root, values=payer_options)
-        self.combo_payer.grid(row=8, column=0, columnspan=2, padx=20, pady=(0, 10), sticky="ew")
+        self.combo_payer.grid(row=8, column=0, columnspan=2, padx=20, pady=(0, 6), sticky="ew")
         
-        # Assign shares checkboxes
-        self.lbl_assign = ctk.CTkLabel(self.root, text="Assign Shares (Equal split)", font=ctk.CTkFont(size=15, weight="bold"))
-        self.lbl_assign.grid(row=9, column=0, columnspan=2, padx=20, pady=(5, 2), sticky="w")
-        
-        self.member_scrcoll_box = ctk.CTkScrollableFrame(self.root, height=130)
-        self.member_scrcoll_box.grid(row=10, column=0, columnspan=2, padx=20, pady=(0, 15), sticky="nsew")
-        
-        if self.edit_item != None:
-            split_preselect = self.edit_item.get("split_between", self.members_list)
-        else:
-            split_preselect = self.members_list
+        self.split_switch = ctk.CTkSwitch(self.root, text="Manual Split Mode ($)", command=self.toggle_split_mode)
+        self.split_switch.grid(row=9, column=0, columnspan=2, padx=20, pady=4, sticky="w")
 
-        for person_name in self.members_list:
-            row_frame = ctk.CTkFrame(self.member_scrcoll_box, fg_color="transparent")
-            row_frame.pack(fill="x", pady=3)
-            
-            if person_name in split_preselect:
-                chk_var = ctk.BooleanVar(value=True)
-            else:
-                chk_var = ctk.BooleanVar(value=False)
-                
-            chk_box = ctk.CTkCheckBox(row_frame, text=person_name, variable=chk_var)
-            chk_box.pack(side="left", padx=5)
-            
-            self.checkbox_widget[person_name] = chk_var
-                
+        # Assign shares scroll box
+        self.member_scrcoll_box = ctk.CTkScrollableFrame(self.root, height=120)
+        self.member_scrcoll_box.grid(row=10, column=0, columnspan=2, padx=20, pady=(0, 8), sticky="nsew")
+        
+        self.render_member_split_list()
+
+        # Theme Switch
+        self.theme_frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        self.theme_frame.grid(row=11, column=0, columnspan=2, padx=20, pady=2)
+        self.theme_switch = ctk.CTkSwitch(self.theme_frame, text="Light/Dark Mode", command=self.toggle_theme)
+        self.theme_switch.pack()
+        
+        current_mode = ctk.get_appearance_mode()
+        if current_mode == "Dark":
+            self.theme_switch.select()
+        else:
+            self.theme_switch.deselect()
+
         # Action Buttons
         self.btn_cancel = ctk.CTkButton(self.root, text="Cancel", fg_color="gray", hover_color="#555555", command=self.cancel_btn_click)
-        self.btn_cancel.grid(row=11, column=0, padx=(20, 5), pady=(0, 15), sticky='ew')
+        self.btn_cancel.grid(row=12, column=0, padx=(20, 5), pady=(5, 15), sticky='ew')
         
         self.btn_confirm = ctk.CTkButton(self.root, text="Confirm", fg_color="#0080ff", command=self.confirm_btn_on_click)
-        self.btn_confirm.grid(row=11, column=1, padx=(5, 20), pady=(0, 15), sticky="ew")
+        self.btn_confirm.grid(row=12, column=1, padx=(5, 20), pady=(5, 15), sticky="ew")
 
         if self.edit_item != None:
             self.entry_expense_title.insert(0, self.edit_item.get("title", ""))
@@ -140,6 +151,84 @@ class ExpenseFormWindow:
             self.entry_date.insert(0, self.edit_item.get("date", ""))
             self.combo_category.set(self.edit_item.get("category", "Food"))
             self.combo_payer.set(self.edit_item.get("payer", self.members_list[0]))
+
+    def open_date_picker(self, target_entry):
+        '''DatePicker popup window'''
+        if HAS_TKCALENDAR == True:
+            picker_top = ctk.CTkToplevel(self.root)
+            picker_top.title("Select Date")
+            picker_top.geometry("280x250")
+            picker_top.lift()
+            picker_top.grab_set()
+            
+            cal = DateEntry(picker_top, date_pattern="dd/mm/yyyy")
+            cal.pack(padx=20, pady=20)
+            
+            def set_date_val():
+                target_entry.delete(0, "end")
+                target_entry.insert(0, cal.get_date().strftime("%d/%m/%Y"))
+                picker_top.destroy()
+                
+            btn_ok = ctk.CTkButton(picker_top, text="Select", command=set_date_val)
+            btn_ok.pack(pady=10)
+        else:
+            messagebox.showinfo("Notice", "tkcalendar extension not installed. Please type date in dd/mm/yyyy format.", parent=self.root)
+
+    def toggle_split_mode(self):
+        '''Toggle between Equal Split and Manual Split Mode'''
+        if self.split_switch.get() == 1:
+            self.manual_split_mode = True
+        else:
+            self.manual_split_mode = False
+        self.render_member_split_list()
+
+    def render_member_split_list(self):
+        ''' cahnge between equal checkboxes or right-aligned manual split entry boxes'''
+        for child in self.member_scrcoll_box.winfo_children():
+            child.destroy()
+
+        self.checkbox_widget = {}
+        self.custom_entry_widget = {}
+
+        if self.edit_item != None:
+            split_preselect = self.edit_item.get("split_between", self.members_list)
+            custom_shares = self.edit_item.get("custom_shares", {})
+        else:
+            split_preselect = self.members_list
+            custom_shares = {}
+
+        for person_name in self.members_list:
+            row_frame = ctk.CTkFrame(self.member_scrcoll_box, fg_color="transparent")
+            row_frame.pack(fill="x", pady=3)
+
+            if self.manual_split_mode == False:
+                # Equal split checkbox mode
+                if person_name in split_preselect:
+                    chk_var = ctk.BooleanVar(value=True)
+                else:
+                    chk_var = ctk.BooleanVar(value=False)
+                    
+                chk_box = ctk.CTkCheckBox(row_frame, text=person_name, variable=chk_var)
+                chk_box.pack(side="left", padx=5)
+                self.checkbox_widget[person_name] = chk_var
+            else:
+                # Manual split entry box mode aligned right
+                lbl = ctk.CTkLabel(row_frame, text=person_name, width=100, anchor="w")
+                lbl.pack(side="left", padx=5)
+
+                amt_entry = ctk.CTkEntry(row_frame, placeholder_text="0.00", width=80, justify="center")
+                amt_entry.pack(side="right", padx=5)
+
+                if person_name in custom_shares:
+                    amt_entry.insert(0, str(custom_shares[person_name]))
+                self.custom_entry_widget[person_name] = amt_entry
+
+    def toggle_theme(self):
+        '''Toggles Light/Dark mode globally'''
+        if self.theme_switch.get() == 1:
+            ctk.set_appearance_mode("Dark")
+        else:
+            ctk.set_appearance_mode("Light")
 
     def show_error(self, message):
         '''methods to show error message'''
@@ -172,11 +261,23 @@ class ExpenseFormWindow:
         if date == "":
             self.show_error("Date cannot be blank!")
             return False
+
         try:
-            datetime.strptime(date, "%d/%m/%Y")
+            expense_dt = datetime.strptime(date, "%d/%m/%Y")
+            trip_start_str = self.trip_info_dict.get("start_date", "")
+            trip_end_str = self.trip_info_dict.get("end_date", "")
+
+            if trip_start_str != "" and trip_end_str != "":
+                trip_start_dt = datetime.strptime(trip_start_str, "%d/%m/%Y")
+                trip_end_dt = datetime.strptime(trip_end_str, "%d/%m/%Y")
+
+                if expense_dt < trip_start_dt or expense_dt > trip_end_dt:
+                    self.show_error(f"Expense date must be within trip period ({trip_start_str} to {trip_end_str})!")
+                    return False
         except ValueError:
             self.show_error("Date must be in the format of dd/mm/yyyy.")
             return False
+
         return True
     
     def confirm_btn_on_click(self):
@@ -191,15 +292,39 @@ class ExpenseFormWindow:
         payer = self.combo_payer.get()
         
         selected_members = []
-        for person_name, chk_var in self.checkbox_widget.items():
-            if chk_var.get() == True:
-                selected_members.append(person_name)
+        custom_shares_dict = {}
 
-        if len(selected_members) == 0:
-            self.show_error("Please select at least one member to split the expense!")
-            return
-        
-        split_share_amount = amount_value / len(selected_members)
+        if self.manual_split_mode == False:
+            for person_name, chk_var in self.checkbox_widget.items():
+                if chk_var.get() == True:
+                    selected_members.append(person_name)
+
+            if len(selected_members) == 0:
+                self.show_error("Please select at least one member to split the expense!")
+                return
+            
+            split_share_amount = amount_value / len(selected_members)
+            share_per_person = round(split_share_amount, 2)
+        else:
+            # Manual split validation
+            total_custom_sum = 0.0
+            for person_name, entry_box in self.custom_entry_widget.items():
+                val_str = entry_box.get().strip().replace("$", "")
+                if val_str != "":
+                    try:
+                        val_num = float(val_str)
+                        if val_num > 0:
+                            custom_shares_dict[person_name] = val_num
+                            total_custom_sum = total_custom_sum + val_num
+                            selected_members.append(person_name)
+                    except ValueError:
+                        self.show_error(f"Invalid custom amount entered for {person_name}!")
+                        return
+
+            if abs(total_custom_sum - amount_value) > 0.01:
+                self.show_error(f"Sum of custom shares (${total_custom_sum:.2f}) must equal total amount (${amount_value:.2f})!")
+                return
+            share_per_person = 0.0
         
         expense_dict = {
             "title": title,
@@ -209,7 +334,8 @@ class ExpenseFormWindow:
             "category": category,
             "payer": payer,
             "split_between": selected_members,
-            "share_per_person": round(split_share_amount, 2)
+            "custom_shares": custom_shares_dict,
+            "share_per_person": share_per_person
         }
 
         if self.file_path != None and os.path.exists(self.file_path) == True:

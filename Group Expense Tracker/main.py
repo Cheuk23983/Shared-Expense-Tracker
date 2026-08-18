@@ -1,9 +1,8 @@
 # Purpose: A controller to connect different components.
 # Author: Hubert Kwan
-# Date: 18/08/2026
-# Version: 1.2
+# Date: 19/08/2026
+# Version: 2.0
 
-# This version has improve the flow of swaping bewteen different screens with out any program breaking.
 
 
 import os
@@ -28,8 +27,9 @@ class AppController:
     def clear_window(self):
         for widget in self.root.winfo_children():
             widget.destroy()
+            
 
-    # Controller for component 1
+    # controller for component 
     def show_launcher_view(self):
         self.clear_window()
         self.root.geometry("450x550")
@@ -44,10 +44,11 @@ class AppController:
         self.active_trip_file = selected_file_path
         self.show_dashboard_view(self.active_trip_file)
 
-    # Controller for component 2
+
+    # controller for component 2
     def show_create_trip_view(self):
         self.clear_window()
-        self.root.geometry("450x650")
+        self.root.geometry("480x700")
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_rowconfigure(0, weight=1)
 
@@ -61,7 +62,7 @@ class AppController:
 
     def open_member_manager_screen(self):
         self.clear_window()
-        self.root.geometry("450x650")
+        self.root.geometry("480x700")
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_rowconfigure(0, weight=1)
 
@@ -71,7 +72,21 @@ class AppController:
         self.member_editor.on_back_callback = lambda: self.show_dashboard_view(self.active_trip_file)
         self.member_editor.on_trip_created_callback = lambda path=None: self.show_dashboard_view(path)
 
-    # Controller for component 3
+    def open_edit_trip_details_screen(self):
+        '''edit trip details mode'''
+        self.clear_window()
+        self.root.geometry("480x700")
+        self.root.grid_columnconfigure(0, weight=1)
+        self.root.grid_rowconfigure(0, weight=1)
+
+        self.trip_detail_editor = TripCreationWindow(
+            self.root, mode="edit_trip_details", file_path=self.active_trip_file
+        )
+        self.trip_detail_editor.on_back_callback = lambda: self.show_dashboard_view(self.active_trip_file)
+        self.trip_detail_editor.on_trip_created_callback = lambda path=None: self.show_dashboard_view(path)
+        
+        
+    # controller for component 3
     def show_dashboard_view(self, file_path=None):
         self.clear_window()
         self.root.geometry("1200x550")
@@ -85,6 +100,7 @@ class AppController:
         self.dashboard.add_expense_btn_on_click_callback = self.open_add_expense_screen
         self.dashboard.edit_expense_btn_on_click_callback = self.open_edit_expense_screen
         self.dashboard.manage_member_btn_on_click_callback = self.open_member_manager_screen
+        self.dashboard.edit_trip_details_callback = self.open_edit_trip_details_screen
         self.dashboard.back_btn_on_click_callback = self.show_launcher_view
 
     def refresh_dashboard_data(self, updated_data=None):
@@ -92,10 +108,11 @@ class AppController:
             self.dashboard.load_trip_file()
             self.dashboard.refresh_dashboard()
 
-    # Controller for component 4
+
+    # controller for component 4
     def open_add_expense_screen(self):
         self.clear_window()
-        self.root.geometry("450x650")
+        self.root.geometry("480x700")
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_rowconfigure(0, weight=1)
 
@@ -109,7 +126,7 @@ class AppController:
 
     def open_edit_expense_screen(self, expense_item=None):
         self.clear_window()
-        self.root.geometry("450x650")
+        self.root.geometry("480x700")
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_rowconfigure(0, weight=1)
 
@@ -122,6 +139,7 @@ class AppController:
         )
 
 
-root = ctk.CTk()
-app = AppController(root)
-root.mainloop()
+if __name__ == "__main__":
+    root = ctk.CTk()
+    app = AppController(root)
+    root.mainloop()
