@@ -139,7 +139,6 @@ class AppController:
         )
 
 
-if __name__ == "__main__":
-    root = ctk.CTk()
-    app = AppController(root)
-    root.mainloop()
+root = ctk.CTk()
+app = AppController(root)
+root.mainloop()
