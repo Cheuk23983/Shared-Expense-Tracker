@@ -1,11 +1,8 @@
 
 # Purpose: This window allow users to enter expense details (title, amount, date, payer, description, and member spliting boxes ) to a trip json file.
 # Author: Hubert Kwan
-# Date: 18/08/2026
-# Version: 1.2
-
-# This version include fixed bugs and error when intergrate with the main program
-
+# Date: 19/08/2026
+# Version: 2.0
 
 
 # import libraries and modules
