@@ -1,13 +1,15 @@
 # Purpose: This program is to create a window for user to create a trip JSON file to add expenses.
 # Author: Hubert Kwan
-# Date: 27/07/2026
-# Version: 1.2
+# Date: 18/08/2026
+# Version: 1.3
 
-# This version has implement a callback funtion which controlled by the main program.
+# This version include fixed bugs and error when intergrate with the main program
 
 # import libraries and modules
 import os
 import json
+# This module is used for input validation 
+import re
 import customtkinter as ctk
 from datetime import datetime
 from tkinter import messagebox
@@ -23,7 +25,11 @@ class TripCreationWindow:
         self.root = root
         self.mode = mode
         self.file_path = file_path
-        self.root.title("Trip Creation Window")
+        # set the window name according to different mode
+        if self.mode == "manage_members":
+            self.root.title("Manage Trip Members")
+        else:
+            self.root.title("Trip Creation Window")
         self.root.geometry("450x650")
         
         self.folder_path = "trips"
@@ -36,15 +42,34 @@ class TripCreationWindow:
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_columnconfigure(1, weight=2)
         
+        # pre load the data of the class is in manage_members mode
+        if self.mode == "manage_members" and self.file_path != None and os.path.exists(self.file_path):
+            self.load_existing_trip_data()
+        
+        
         # Build the GUI layout
         self.create_widgets()
         
+    def load_existing_trip_data(self):
+        '''load existing trip details from the dashboard to manage members'''
+        try:
+            with open(self.file_path, "r", encoding="utf-8 ") as f:
+                self.trip_info_dict = json.load(f)
+                self.added_members = list(self.trip_info_dict.get("members", []))
+        except FileNotFoundError:
+            self.show_error(f"Could not find file: {self.file_path}")
+    
         
     def create_widgets(self):
         '''Build the form layout and input for creating a trip'''
         # title label
-        self.lbl_title = ctk.CTkLabel(self.root, text="Create a Trip", font=ctk.CTkFont(size=20, weight="bold"))
-        self.lbl_title.grid(row=0, column=0, columnspan=2, pady=(20,10))
+        # set title name according to mode selection
+        if self.mode == "manage_members":
+            heading_text = "Manage Trip Members"
+        else:
+            heading_text = "Create a Trip"
+        self.lbl_title = ctk.CTkLabel(self.root, text=heading_text, font=ctk.CTkFont(size=20, weight="bold"))
+        self.lbl_title.grid(row=0, column=0, columnspan=2, pady=(20, 10))
         
         # trip name label and entry box
         self.lbl_trip_name = ctk.CTkLabel(self.root, text="Trip Name:")
@@ -94,11 +119,31 @@ class TripCreationWindow:
         self.action_btn_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         self.action_btn_frame.grid(row=8, column=0, columnspan=2, pady=(10, 20))
         
+        # set the confirm button text according to mode selection
+        if self.mode == "manage_members":
+            btn_confirm_text = "Save"
+        else:
+            btn_confirm_text = "Create"
+        
         self.btn_back = ctk.CTkButton(self.action_btn_frame, text="Back", fg_color="grey", hover_color="#555555", width=100, command=self.back_btn_on_click)
         self.btn_back.pack(side="left", padx=10)
         
-        self.btn_create = ctk.CTkButton(self.action_btn_frame, text="Create", fg_color="#0080FF", width=100, command=self.create_btn_on_click)
+        self.btn_create = ctk.CTkButton(self.action_btn_frame, text= btn_confirm_text, fg_color="#0080FF", width=100, command=self.create_btn_on_click)
         self.btn_create.pack(side="right", padx=10)
+        
+        # display the trip data in manage_members mode
+        if self.mode == "manage_members" and len(self.trip_info_dict) > 0:
+                self.entry_trip_name.insert(0, self.trip_info_dict.get("name", ""))
+                self.option_currency.set(self.trip_info_dict.get("base_currency", "NZD"))
+                self.entry_start_date.insert(0, self.trip_info_dict.get("start_date", ""))
+                self.entry_end_date.insert(0, self.trip_info_dict.get("end_date", ""))
+                # set the entry box for all the other data to disable to prevent any data incorrrection.
+                self.entry_trip_name.configure(state="disabled")
+                self.option_currency.configure(state="disabled")
+                self.entry_start_date.configure(state="disabled")
+                self.entry_end_date.configure(state="disabled")
+        # update the member list       
+        self.update_member_list()
         
         
     def show_error(self, message):
@@ -113,9 +158,15 @@ class TripCreationWindow:
         if input_name == "":
             self.show_error("Member name cannot be blank!")
             return
-            
-        existing_lower = [m.lower() for m in self.added_members]
-        if input_name.lower() in existing_lower:
+        # a new condition to limited the name input must be letters and space
+        if re.match(r"^[A-Za-z0-9\s]+$", input_name):
+            self.show_error("Member name can only contain letters and space!")
+            return
+
+        added_member_lower = []
+        for member_item in self.added_members:
+            added_member_lower.append(member_item.lower())
+        if input_name.lower() in added_member_lower:
             self.show_error("Member is already added!")
             return
         
@@ -124,6 +175,13 @@ class TripCreationWindow:
         self.update_member_list()
         
         
+    # function to remove a member
+    def remove_member(self, name):
+        '''remove a member from the list'''
+        if name in self.added_members:
+            self.added_members.remove(name)
+            self.update_member_list()
+    
     def update_member_list(self):
         '''Update member list when a new member name is added.'''
         for widget in self.memeber_list_widgets:
@@ -136,6 +194,10 @@ class TripCreationWindow:
             
             lbl_name = ctk.CTkLabel(member_list, text=f"{name}", font=ctk.CTkFont(size=13))
             lbl_name.pack(side="left", padx=5)
+            
+            # button to remove members
+            btn_remove = ctk.CTkButton(member_list, text="X", width=25, height=20, fg_color="#FF4D4D", hover_color="#CC0000", command=lambda target_name=name: self.remove_member(target_name))            
+            btn_remove.pack(side="right", padx=5)
             self.memeber_list_widgets.append(member_list)
 
     def validate_input(self):
@@ -172,44 +234,67 @@ class TripCreationWindow:
         
     def create_btn_on_click(self):
         '''save the trip data into a json file'''
-        if not self.validate_input():
-            return
-        
-        trip_name = self.entry_trip_name.get().strip()
-        
-        if not os.path.exists(self.folder_path):
-            os.makedirs(self.folder_path)
-        
-        clean_file_name = trip_name.lower().replace(" ", "_") + ".json"
-        file_path = os.path.join(self.folder_path, clean_file_name)
-        
-        if os.path.exists(file_path):
-            confirm = messagebox.askyesno(
-                "Overwrite Warning", 
-                f"A trip named '{trip_name}' already exists!\nDo you want to overwrite it?"
-            )
-            if not confirm:
+        if self.mode == "create_trip":
+            if not self.validate_input():
                 return
-        
-        trip_data = {
-            "name": trip_name,
-            "base_currency": self.option_currency.get(),
-            "start_date": self.entry_start_date.get().strip(),
-            "end_date": self.entry_end_date.get().strip(),
-            "members": self.added_members,
-            "expenses": []
-        }
-        
-        try:
-            with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(trip_data, f, indent=4)
-            messagebox.showinfo("Success", f"Trip '{trip_name}', successfully created")
             
-            # pass the file path to main program and open trip dashboard.
-            if self.on_trip_created_callback:
-                self.on_trip_created_callback(file_path)
-        except FileNotFoundError:
-            self.show_error(f"Could not save trip file:{file_path}")
+            trip_name = self.entry_trip_name.get().strip()
+            
+            if not os.path.exists(self.folder_path):
+                os.makedirs(self.folder_path)
+            
+            clean_file_name = trip_name.lower().replace(" ", "_") + ".json"
+            file_path = os.path.join(self.folder_path, clean_file_name)
+            
+            if os.path.exists(file_path):
+                confirm = messagebox.askyesno(
+                    "Overwrite Warning", 
+                    f"A trip named '{trip_name}' already exists!\nDo you want to overwrite it?"
+                )
+                if not confirm:
+                    return
+            
+            trip_data = {
+                "name": trip_name,
+                "base_currency": self.option_currency.get(),
+                "start_date": self.entry_start_date.get().strip(),
+                "end_date": self.entry_end_date.get().strip(),
+                "members": self.added_members,
+                "expenses": []
+            }
+            
+            try:
+                with open(file_path, "w", encoding="utf-8") as f:
+                    json.dump(trip_data, f, indent=4)
+                messagebox.showinfo("Success", f"Trip '{trip_name}', successfully created")
+                
+                # pass the file path to main program and open trip dashboard.
+                if self.on_trip_created_callback:
+                    self.on_trip_created_callback(file_path)
+            except FileNotFoundError:
+                self.show_error(f"Could not save trip file:{file_path}")
+                
+        elif self.mode =="manage_members":
+            if len(self.added_members) == 0:
+                self.show_error("You must have at least 1 member in the trip!")
+                return
+                
+            if self.file_path:
+                self.show_error("No trip file provided to update members!")
+                return
+
+            self.trip_info_dict["members"] = self.added_members
+            try:
+                with open(self.file_path, "w", encoding="utf-8") as f:
+                    json.dump(self.trip_info_dict, f, indent=4)
+                messagebox.showinfo("Success", "Members successfully updated!")
+                
+                if self.on_trip_created_callback:
+                    self.on_trip_created_callback(self.file_path)
+            except FileNotFoundError:
+                self.show_error(f"Could not find trip file to update members: {self.file_path}")
+
+
             
     
     def back_btn_on_click(self):
@@ -217,11 +302,4 @@ class TripCreationWindow:
         if self.on_back_callback:
             self.on_back_callback()
         else:
-            print("Back to main menu")
-        
-
-# run the current window
-# comment out the window runner which only display the window when called in main program.
-# root = ctk.CTk()
-# app = TripCreationWindow(root)
-# root.mainloop()
+            print("Back button clicked")

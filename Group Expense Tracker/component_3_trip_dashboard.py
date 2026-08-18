@@ -1,9 +1,9 @@
 # Purpose: This part of the component is to display detail of a chosen trip on the launcher, like the transactions, settlement, and member balance etc.
 # Author: Hubert Kwan
-# Date: 04/08/2026
-# Version: 1.1
+# Date: 18/08/2026
+# Version: 1.2
 
-# This version has implement a callback funtion which controlled by the main program.
+# This version include fixed bugs and error when intergrate with the main program
 
 # import libraries and modules
 import os
@@ -20,7 +20,7 @@ ctk.set_default_color_theme("blue")
 
 class TripDashboard:
     '''Main GUI window class for displaying trip summary and expense details'''
-    def __init__(self, root, file_path="trips/japan.json"):
+    def __init__(self, root, file_path=None):
         '''Initialises the dashboard window and loads trip data'''
         self.root = root
         self.root.title("Trip Dashboard")
@@ -28,7 +28,7 @@ class TripDashboard:
         
         self.file_path = file_path
         self.trip_info_dict = {}
-        
+
         # callback function assigned from main program
         self.add_expense_btn_on_click_callback = None
         self.edit_expense_btn_on_click_callback = None
@@ -36,23 +36,27 @@ class TripDashboard:
         self.back_btn_on_click_callback = None
 
         # Load PNG button icons using PIL for action buttons
-        self.delete_icon = ctk.CTkImage(
-            light_image=Image.open("assets/delete.png"),
-            dark_image=Image.open("assets/delete.png"),
-            size=(16, 16)
-        )
-        self.edit_icon = ctk.CTkImage(
-            light_image=Image.open("assets/edit.png"),
-            dark_image=Image.open("assets/edit.png"),
-            size=(16, 16)
-        )
+        try:
+            self.delete_icon = ctk.CTkImage(
+                light_image=Image.open("assets/delete.png"),
+                dark_image=Image.open("assets/delete.png"),
+                size=(16, 16)
+            )
+            self.edit_icon = ctk.CTkImage(
+                light_image=Image.open("assets/edit.png"),
+                dark_image=Image.open("assets/edit.png"),
+                size=(16, 16)
+            )
+        except FileNotFoundError:
+            self.delete_icon = None
+            self.edit_icon = None
         
         # Configure main window layout weights
         self.root.grid_columnconfigure(0, weight=1)
         self.root.grid_rowconfigure(1, weight=1)
         
         # Load trip data if file path exists on computer
-        if self.file_path and os.path.exists(self.file_path):
+        if self.file_path != None and os.path.exists(self.file_path) == True:
             self.load_trip_file()
         
         # Build UI layout widgets
@@ -60,6 +64,9 @@ class TripDashboard:
         
     def load_trip_file(self):
         '''Loads trip details safely from the selected JSON file'''
+        if self.file_path == None:
+            return
+
         try:
             with open(self.file_path, "r", encoding="utf-8") as file_data:
                 self.trip_info_dict = json.load(file_data)
@@ -68,21 +75,20 @@ class TripDashboard:
 
     def create_widgets(self):
         '''creates trip dashboard layout'''
-        # top title frame (trip name & reutrn button)
+        # top title frame (trip name & return button)
         self.top_title_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         self.top_title_frame.grid(row=0, column=0, padx=20, pady=(15, 0), sticky="ew")
-        # trip name label
+        
         trip_name = self.trip_info_dict.get("name", "Trip Dashboard")
         self.lbl_trip_title = ctk.CTkLabel(self.top_title_frame, text=f"Trip: {trip_name}", font=ctk.CTkFont(size=20, weight="bold"))
         self.lbl_trip_title.pack(side="left")
-        # retrun button
+        
         self.btn_back = ctk.CTkButton(self.top_title_frame, text="Back", width=80, fg_color="gray", hover_color="#555555", command=self.back_btn_on_click)
         self.btn_back.pack(side="right")
         
-        # main frame (member balance, transaction detail, and settlement)
+        # main frame
         self.main_frame = ctk.CTkFrame(self.root, fg_color="transparent")
         self.main_frame.grid(row=1, column=0, padx=20, pady=(5, 15), sticky="nsew")
-        # 3:1 column ratio to enusre teh table section has the biggest area
         self.main_frame.grid_columnconfigure(0, weight=3)
         self.main_frame.grid_columnconfigure(1, weight=1)
         self.main_frame.grid_rowconfigure(0, weight=1)
@@ -93,44 +99,38 @@ class TripDashboard:
         self.middle_frame.grid_columnconfigure(0, weight=1)
         self.middle_frame.grid_rowconfigure(1, weight=1)
         
-        # frame to hold the total cost
+        # total cost banner
         self.total_cost_box = ctk.CTkFrame(self.middle_frame, height=50, corner_radius=8)
         self.total_cost_box.grid(row=0, column=0, sticky="ew", pady=(0, 10))
-        # label of the total cost
+        
         self.lbl_total_cost = ctk.CTkLabel(self.total_cost_box, text="Total Cost: $0.00", font=ctk.CTkFont(size=18, weight="bold"))
         self.lbl_total_cost.pack(side="left", padx=15, pady=10)
         
-        # frame to hold the member balance and expenses table
+        # lower split container
         self.lower_split_frame = ctk.CTkFrame(self.middle_frame, fg_color="transparent")
         self.lower_split_frame.grid(row=1, column=0, sticky="nsew")
-        # column for member balance
         self.lower_split_frame.grid_columnconfigure(0, weight=1)
-        # coloumn for expense table
-        self.lower_split_frame.grid_columnconfigure(1, weight=2)
+        self.lower_split_frame.grid_columnconfigure(1, weight=3)
         self.lower_split_frame.grid_rowconfigure(0, weight=1)
         
         # Member balance box
         self.member_balance_box = ctk.CTkFrame(self.lower_split_frame, corner_radius=10)
-        self.member_balance_box.grid(row=0, column=0, padx=(0,10), sticky="nsew")
-        # member balance title
+        self.member_balance_box.grid(row=0, column=0, padx=(0, 10), sticky="nsew")
+        
         self.lbl_balance_title = ctk.CTkLabel(self.member_balance_box, text="Member Balances", font=ctk.CTkFont(size=15, weight="bold"))
         self.lbl_balance_title.pack(pady=10)
-        #scrollable frame to show all member
+        
         self.member_scrollable_box = ctk.CTkScrollableFrame(self.member_balance_box, fg_color="transparent")
         self.member_scrollable_box.pack(fill="both", expand=True, padx=5, pady=5)
-        # button to manage members (add/remove)
-        self.btn_manage_member = ctk.CTkButton(self.member_scrollable_box, text="Add/Remove member", height=30)
-        self.btn_manage_member.pack(padx=10)
         
-        # expenses table frame container
+        # Table container
         self.table_container_frame = ctk.CTkFrame(self.lower_split_frame, fg_color="transparent")
         self.table_container_frame.grid(row=0, column=1, sticky="nsew")
         self.table_container_frame.grid_columnconfigure(0, weight=1)
         self.table_container_frame.grid_rowconfigure(1, weight=1)
         
-        # changed from a grid layout to pack layout so the table has fixed width.
         self.table_header_frame = ctk.CTkFrame(self.table_container_frame, height=35, fg_color="#adadad")
-        self.table_header_frame.grid(row=0, column=0, sticky="ew", pady=(0,5))
+        self.table_header_frame.grid(row=0, column=0, sticky="ew", pady=(0, 5))
         
         lbl_header_date = ctk.CTkLabel(self.table_header_frame, text="Date", width=85, anchor="w", font=ctk.CTkFont(size=12, weight="bold"))
         lbl_header_date.pack(side="left", padx=(10, 5), pady=5)
@@ -150,10 +150,10 @@ class TripDashboard:
         lbl_header_action = ctk.CTkLabel(self.table_header_frame, text="Action", width=60, anchor="center", font=ctk.CTkFont(size=12, weight="bold"))
         lbl_header_action.pack(side="left", padx=5, pady=5)
         
-         # Scrollable container for transaction rows
         self.transactions_scrollable_frame = ctk.CTkScrollableFrame(self.table_container_frame)
         self.transactions_scrollable_frame.grid(row=1, column=0, sticky="nsew")
         
+        # Right column
         self.right_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.right_frame.grid(row=0, column=1, sticky="nsew")
 
@@ -163,45 +163,34 @@ class TripDashboard:
         self.btn_save_changes = ctk.CTkButton(self.right_frame, text="✔ Save Changes", fg_color="#00a86b", height=35, command=self.save_btn_on_click)
         self.btn_save_changes.pack(fill="x", pady=(0, 15))
         
-        # Settlement box frame
         self.settlement_box = ctk.CTkFrame(self.right_frame, corner_radius=10)
         self.settlement_box.pack(fill="both", expand=True)
 
-        self.lbl_settle_title = ctk.CTkLabel(
-            self.settlement_box, 
-            text="Simplified Settlement", 
-            font=ctk.CTkFont(size=14, weight="bold")
-        )
+        self.lbl_settle_title = ctk.CTkLabel(self.settlement_box, text="Simplified Settlement", font=ctk.CTkFont(size=14, weight="bold"))
         self.lbl_settle_title.pack(pady=10)
 
         self.settlements_scroll_box = ctk.CTkScrollableFrame(self.settlement_box, fg_color="transparent")
         self.settlements_scroll_box.pack(fill="both", expand=True, padx=5, pady=5)
 
-        # Refresh and display the dashboard values
         self.refresh_dashboard()
-
 
     def show_error(self, message):
         '''Display error message when invalid input'''
-        messagebox.showerror("Error", message)
-    
+        messagebox.showerror("Error", message, parent=self.root)
         
     def refresh_dashboard(self):
         '''refresh money details, transaction table, member balance, and settlement'''
-        # get trip data from json file
         expenses_list = self.trip_info_dict.get("expenses", [])
         currency = self.trip_info_dict.get("base_currency", "NZD")
         group_members = self.trip_info_dict.get("members", [])
 
-        # Calculate totl cost from all expenses amount
+        # Calculate total cost sum
         total_sum = 0.0
         for item in expenses_list:
             total_sum = total_sum + item.get("amount", 0.0)
 
-        # update header total text
         self.lbl_total_cost.configure(text=f"Total Cost: ${total_sum:.2f} ({currency})")
 
-        # clear transactions frame with winfo_children
         for child in self.transactions_scrollable_frame.winfo_children():
             child.destroy()
 
@@ -212,7 +201,7 @@ class TripDashboard:
             lbl_date = ctk.CTkLabel(row_frame, text=item.get("date", "N/A"), width=85, anchor="w")
             lbl_date.pack(side="left", padx=(5, 5))
 
-            lbl_description = ctk.CTkLabel(row_frame, text=item.get("description", "No description"), width=160, anchor="w")
+            lbl_description = ctk.CTkLabel(row_frame, text=item.get("title", item.get("description", "No description")), width=160, anchor="w")
             lbl_description.pack(side="left", padx=5)
 
             lbl_category = ctk.CTkLabel(row_frame, text=item.get("category", "other"), width=110, anchor="w")
@@ -224,29 +213,37 @@ class TripDashboard:
             lbl_amount = ctk.CTkLabel(row_frame, text=f"${item.get('amount', 0.0):.2f}", width=75, anchor="w")
             lbl_amount.pack(side="left", padx=5)
 
-            # Actions frame holding edit and delete buttons (fixed 60px width)
             action_frame = ctk.CTkFrame(row_frame, fg_color="transparent", width=60)
             action_frame.pack(side="left", padx=5)
 
-            btn_edit = ctk.CTkButton(action_frame, text="", image=self.edit_icon, width=24, height=24, fg_color="transparent", hover_color="#E0E0E0", command=lambda x=item: self.edit_expense_btn_on_click(x))
+            def make_edit_cmd(expense_item):
+                return lambda: self.edit_expense_btn_on_click(expense_item)
+
+            def make_delete_cmd(expense_item):
+                return lambda: self.delete_expense(expense_item)
+
+            if self.edit_icon != None:
+                btn_edit = ctk.CTkButton(action_frame, text="", image=self.edit_icon, width=24, height=24, fg_color="transparent", hover_color="#E0E0E0", command=make_edit_cmd(item))
+            else:
+                btn_edit = ctk.CTkButton(action_frame, text="Edit", width=24, height=24, fg_color="transparent", hover_color="#E0E0E0", command=make_edit_cmd(item))
             btn_edit.pack(side="left", padx=1)
 
-            btn_delete = ctk.CTkButton(action_frame, text="", image=self.delete_icon, width=24, height=24, fg_color="transparent", hover_color="#FFE5E5", command=lambda x=item: self.delete_expense(x))
+            if self.delete_icon != None:
+                btn_delete = ctk.CTkButton(action_frame, text="", image=self.delete_icon, width=24, height=24, fg_color="transparent", hover_color="#FFE5E5", command=make_delete_cmd(item))
+            else:
+                btn_delete = ctk.CTkButton(action_frame, text="X", width=24, height=24, fg_color="transparent", hover_color="#FFE5E5", command=make_delete_cmd(item))
             btn_delete.pack(side="left", padx=1)
 
-        # using winfo.children to clear all widgets from the member box.
         for child in self.member_scrollable_box.winfo_children():
             child.destroy()
 
         self.btn_manage_member = ctk.CTkButton(self.member_scrollable_box, text="Add/Remove member", height=30, command=self.manage_member_btn_on_click)
         self.btn_manage_member.pack(padx=10, pady=(0, 10))
-        
-        # Initialise net balance dictionary for each member
+
         member_balances = {}
         for member_name in group_members:
             member_balances[member_name] = 0.0
 
-        # Calculate debit and credit splits per member
         for item in expenses_list:
             payer_name = item.get("payer", "")
             amount_paid = item.get("amount", 0.0)
@@ -274,7 +271,6 @@ class TripDashboard:
             lbl_member_balance = ctk.CTkLabel(self.member_scrollable_box, text=status_text, text_color=text_color_val, font=ctk.CTkFont(size=12, weight="bold"))
             lbl_member_balance.pack(anchor="w", padx=5, pady=3)
 
-        # clear settlement box using winfo_children method
         for child in self.settlements_scroll_box.winfo_children():
             child.destroy()
 
@@ -287,13 +283,6 @@ class TripDashboard:
                         lbl_settlement.pack(anchor="w", pady=2)
                         break
 
-        # Calculate overall per-person split estimate
-        if len(group_members) > 0:
-            per_person_split = total_sum / len(group_members)
-        else:
-            per_person_split = 0.0
-        
-        
     def delete_expense(self, item):
         '''Removes an expense item from the list'''
         if item in self.trip_info_dict.get("expenses", []):
@@ -301,55 +290,39 @@ class TripDashboard:
             self.save_trip_data()
             self.refresh_dashboard()
 
-
     def edit_expense_btn_on_click(self, item=None):
-            '''Action when edit expense button is clicked'''
-            if self.edit_expense_btn_on_click_callback:
-                self.edit_expense_btn_on_click_callback(item)
-            else:
-                print("Edit expense button clicked")
-    
+        '''Action when edit expense button is clicked'''
+        if self.edit_expense_btn_on_click_callback:
+            self.edit_expense_btn_on_click_callback(item)
+
     def add_expense_btn_on_click(self):
         '''Action when add expense button is clicked'''
         if self.add_expense_btn_on_click_callback:
             self.add_expense_btn_on_click_callback()
-        else:
-            print("Add expense button clicked")
 
-        
-    
     def save_trip_data(self):
         '''Saves current trip dictionary state back into the JSON file'''
+        if self.file_path == None:
+            self.show_error("No file path set to save trip data!")
+            return
+
         try:
             with open(self.file_path, "w", encoding="utf-8") as f:
                 json.dump(self.trip_info_dict, f, indent=4)
         except FileNotFoundError:
             self.show_error("Could not find the trip file to save changes!")
 
-
     def save_btn_on_click(self):
         '''Save the trip data into a json file'''
         self.save_trip_data()
-        messagebox.showinfo("Success", "Trip Data has been saved successfully")
-
+        messagebox.showinfo("Success", "Trip Data has been saved successfully", parent=self.root)
 
     def manage_member_btn_on_click(self):
-            '''Action when add/remove member button is clicked'''
-            if self.manage_member_btn_on_click_callback:
-                self.manage_member_btn_on_click_callback()
-            else:
-                print("Manage member button clicked")
-    
+        '''Action when add/remove member button is clicked'''
+        if self.manage_member_btn_on_click_callback:
+            self.manage_member_btn_on_click_callback()
+
     def back_btn_on_click(self):
         '''Return to the launcher window'''
         if self.back_btn_on_click_callback:
             self.back_btn_on_click_callback()
-        else:
-            print("back to main menu")
-        
-
-# run the current window
-# comment out the window runner which only display the window when called in main program.
-# root = ctk.CTk()
-# app = TripDashboard(root)
-# root.mainloop()
