@@ -1,0 +1,35 @@
+{
+    "name": "Auckland",
+    "base_currency": "NZD",
+    "start_date": "12/12/2006",
+    "end_date": "13/12/2006",
+    "members": [
+        "Mew"
+    ],
+    "expenses": [
+        {
+            "title": "Food",
+            "description": "Food",
+            "amount": 199.0,
+            "date": "01/12/2005",
+            "category": "Food",
+            "payer": "Mew",
+            "split_between": [
+                "Mew"
+            ],
+            "share_per_person": 199.0
+        },
+        {
+            "title": "Tomboy Dinner",
+            "description": "Tomboy Dinner",
+            "amount": 1900.0,
+            "date": "03/05/2027",
+            "category": "Food",
+            "payer": "Mew",
+            "split_between": [
+                "Mew"
+            ],
+            "share_per_person": 1900.0
+        }
+    ]
+}

@@ -1,10 +1,362 @@
 {
-    "name": "hong kong trip",
-    "base_currency": "NZD",
-    "start_date": "29/02/2028",
-    "end_date": "03/03/2028",
+    "name": "Hong Kong Trip",
+    "base_currency": "HKD",
+    "start_date": "09/09/2026",
+    "end_date": "20/09/2026",
     "members": [
-        "alice"
+        "hubert",
+        "cheuk",
+        "Danny"
     ],
-    "expenses": []
+    "expenses": [
+        {
+            "title": "Sushiro Dinner",
+            "description": "Sushiro Dinner",
+            "amount": 85.5,
+            "date": "10/09/2026",
+            "category": "Food",
+            "payer": "hubert",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 28.5
+        },
+        {
+            "title": "Airbnb Accommodation",
+            "description": "Airbnb Accommodation",
+            "amount": 600.0,
+            "date": "10/09/2026",
+            "category": "Accommodation",
+            "payer": "cheuk",
+            "split_between": [
+                "hubert",
+                "cheuk"
+            ],
+            "custom_shares": {
+                "hubert": 400.0,
+                "cheuk": 200.0
+            },
+            "share_per_person": 0.0
+        },
+        {
+            "title": "Rental Car Fuel",
+            "description": "Rental Car Fuel",
+            "amount": 75.0,
+            "date": "11/09/2026",
+            "category": "Transport",
+            "payer": "laam",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 25.0
+        },
+        {
+            "title": "Gondola & Luge Tickets",
+            "description": "Gondola & Luge Tickets",
+            "amount": 210.0,
+            "date": "11/09/2026",
+            "category": "Activities",
+            "payer": "hubert",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 70.0
+        },
+        {
+            "title": "Morning Coffee & Pastries",
+            "description": "Morning Coffee & Pastries",
+            "amount": 27.0,
+            "date": "12/09/2026",
+            "category": "Food",
+            "payer": "laam",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 9.0
+        },
+        {
+            "title": "Supermarket Grocery Run",
+            "description": "Supermarket Grocery Run",
+            "amount": 114.0,
+            "date": "12/09/2026",
+            "category": "Food",
+            "payer": "cheuk",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 38.0
+        },
+        {
+            "title": "Milford Sound Boat Cruise",
+            "description": "Milford Sound Boat Cruise",
+            "amount": 360.0,
+            "date": "13/09/2026",
+            "category": "Activities",
+            "payer": "laam",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 120.0
+        },
+        {
+            "title": "Highway Toll Fees",
+            "description": "Highway Toll Fees",
+            "amount": 15.0,
+            "date": "13/09/2026",
+            "category": "Transport",
+            "payer": "laam",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 5.0
+        },
+        {
+            "title": "Seafood Restaurant Dinner",
+            "description": "Seafood Restaurant Dinner",
+            "amount": 195.0,
+            "date": "13/09/2026",
+            "category": "Food",
+            "payer": "hubert",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {
+                "hubert": 80.0,
+                "cheuk": 65.0,
+                "laam": 50.0
+            },
+            "share_per_person": 0.0
+        },
+        {
+            "title": "Museum Entry Tickets",
+            "description": "Museum Entry Tickets",
+            "amount": 60.0,
+            "date": "14/09/2026",
+            "category": "Activities",
+            "payer": "cheuk",
+            "split_between": [
+                "hubert",
+                "cheuk"
+            ],
+            "custom_shares": {},
+            "share_per_person": 30.0
+        },
+        {
+            "title": "City Bus Day Passes",
+            "description": "City Bus Day Passes",
+            "amount": 33.0,
+            "date": "14/09/2026",
+            "category": "Transport",
+            "payer": "laam",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 11.0
+        },
+        {
+            "title": "Burger & Fries Lunch",
+            "description": "Burger & Fries Lunch",
+            "amount": 69.0,
+            "date": "15/09/2026",
+            "category": "Food",
+            "payer": "laam",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {
+                "hubert": 30.0,
+                "cheuk": 10.0,
+                "laam": 29.0
+            },
+            "share_per_person": 0.0
+        },
+        {
+            "title": "Souvenir Gift Shop",
+            "description": "Souvenir Gift Shop",
+            "amount": 145.0,
+            "date": "15/09/2026",
+            "category": "Other",
+            "payer": "hubert",
+            "split_between": [
+                "hubert",
+                "cheuk"
+            ],
+            "custom_shares": {
+                "hubert": 95.0,
+                "cheuk": 50.0
+            },
+            "share_per_person": 0.0
+        },
+        {
+            "title": "Hot Springs Spa Tickets",
+            "description": "Hot Springs Spa Tickets",
+            "amount": 180.0,
+            "date": "16/09/2026",
+            "category": "Activities",
+            "payer": "cheuk",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 60.0
+        },
+        {
+            "title": "Luggage Storage Storage",
+            "description": "Luggage Storage Storage",
+            "amount": 24.0,
+            "date": "17/09/2026",
+            "category": "Other",
+            "payer": "laam",
+            "split_between": [
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 12.0
+        },
+        {
+            "title": "Airport Cafe Drinks",
+            "description": "Airport Cafe Drinks",
+            "amount": 31.5,
+            "date": "17/09/2026",
+            "category": "Food",
+            "payer": "hubert",
+            "split_between": [
+                "hubert",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 15.75
+        },
+        {
+            "title": "Emergency First Aid Kit",
+            "description": "Emergency First Aid Kit",
+            "amount": 18.0,
+            "date": "18/09/2026",
+            "category": "Other",
+            "payer": "cheuk",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 6.0
+        },
+        {
+            "title": "Taxi to Hotel",
+            "description": "Taxi to Hotel",
+            "amount": 42.0,
+            "date": "18/09/2026",
+            "category": "Transport",
+            "payer": "laam",
+            "split_between": [
+                "hubert",
+                "laam"
+            ],
+            "custom_shares": {},
+            "share_per_person": 21.0
+        },
+        {
+            "title": "Farewell Pizza Party",
+            "description": "Farewell Pizza Party",
+            "amount": 120.0,
+            "date": "19/09/2026",
+            "category": "Food",
+            "payer": "laam",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "laam"
+            ],
+            "custom_shares": {
+                "hubert": 40.0,
+                "cheuk": 40.0,
+                "laam": 40.0
+            },
+            "share_per_person": 0.0
+        },
+        {
+            "title": "flights to auckland",
+            "description": "flights to auckland",
+            "amount": 10000.0,
+            "date": "22/09/2026",
+            "category": "Transport",
+            "payer": "hubert",
+            "split_between": [
+                "hubert",
+                "cheuk"
+            ],
+            "custom_shares": {},
+            "share_per_person": 5000.0
+        },
+        {
+            "title": "ticket for metro",
+            "description": "ticket for metro",
+            "amount": 127.77,
+            "date": "20/09/2026",
+            "category": "Food",
+            "payer": "hubert",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "Danny"
+            ],
+            "custom_shares": {
+                "hubert": 100.0,
+                "cheuk": 20.0,
+                "Danny": 7.77
+            },
+            "share_per_person": 0.0
+        },
+        {
+            "title": "metro",
+            "description": "metro",
+            "amount": 100.0,
+            "date": "19/09/2026",
+            "category": "Food",
+            "payer": "Danny",
+            "split_between": [
+                "hubert",
+                "cheuk",
+                "Danny"
+            ],
+            "custom_shares": {
+                "hubert": 50.0,
+                "cheuk": 20.0,
+                "Danny": 30.0
+            },
+            "share_per_person": 0.0
+        }
+    ]
 }
