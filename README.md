@@ -7,11 +7,7 @@ When travelling with friends or family, tracking who paid for what and calculati
 * **Batch Operations:** Multi-select and delete old or unnecessary trip files directly from the launcher dashboard.
 * **Dynamic Search & Filtering:** Filter trip ledgers in real-time by category, date, or search keywords.
 * **Flexible Cost Allocation:** Support for both **Equal Splits** and custom **Percentage Splits**.
-* **Real-time Input Validation:** Asynchronous text monitoring that flags invalid inputs (e.g., non-numeric entries or negative amounts) in red immediately while typing, backed by submission-intercepting modal alerts.
-* **Floating-Point Variance Allocation:** Automated handling for fractional decimal gaps (e.g., splitting $10.00 three ways) with explicit user allocation controls.
 * **Debt-Simplification Solver:** An optimised algorithm that calculates net positions ($Payments - Expenses$) and pairs maximum debtors with maximum creditors to minimise overall repayment transactions.
-* **Excel-Compatible CSV Export:** Native export engine generating structured CSV settlement and transaction reports.
-* **Dirty-State Data Safeguards:** Intercepts window closures and navigation to prevent accidental loss of unsaved changes.
 ## Built with
 * **Language:** Python3.11
 * **GUI Framework:** CustomTkinter
